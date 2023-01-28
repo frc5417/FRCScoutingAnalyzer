@@ -3,7 +3,7 @@ set(QT_MINIMUM_VERSION 5.1.0)
 
 set(PROJECT_NAME ScoutingAnalyzer)
 
-project($PROJECT_NAME)
+project(${PROJECT_NAME})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
@@ -15,10 +15,10 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
-add_executable($PROJECT_NAME
+add_executable(${PROJECT_NAME}
   main.cpp
   mainwindow.cpp
   mainwindow.h
 )
 
-target_link_libraries($PROJECT_NAME PRIVATE Qt5::Widgets )
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Widgets )
