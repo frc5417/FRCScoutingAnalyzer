@@ -17,6 +17,8 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 add_executable(${PROJECT_NAME}
   main.cpp
+  datasetpage.cpp
+  datasetpage.h
   mainwindow.cpp
   mainwindow.h
 )

@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "datasetpage.h"
 
 #include <QApplication>
 
@@ -9,6 +9,6 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationName("");
     QCoreApplication::setApplicationVersion("0.1.0");
     
-    MainWindow *w = new MainWindow();
+    DatasetPage *w = new DatasetPage();
     return app.exec();
 }

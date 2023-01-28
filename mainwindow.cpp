@@ -6,10 +6,11 @@
 #include <QPushButton>
 #include <QLabel>
 
-MainWindow::MainWindow()
+MainWindow::MainWindow(QString datasetPath)
     : QWidget()
 {
-    stringData = new QStringList();
+
+    stringData = QStringList();
 
     this->setStyleSheet("background-color: #2d2d2d; color: white;");
 
