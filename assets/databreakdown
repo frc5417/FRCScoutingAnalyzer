@@ -1,0 +1,24 @@
+# FORMAT = id|Name|type|points|settings example: df|Defensive Skill|number|0|ignore=-1
+
+auto
+lc|Left Community|bool|3
+acb|Cube Bottom Scored|number|3
+acm|Cube Middle Scored|number|4
+act|Cube Top Scored|number|6
+aob|Cone Bottom Scored|number|3
+aom|Cone Middle Scored|number|4
+aot|Cone Top Scored|number|6
+adc|Robot Docked|bool
+aeg|Robot Engaged|bool
+teleop
+tcb|Cube Bottom Scored|number
+tcm|Cube Middle Scored|number
+tct|Cube Top Scored|number
+tob|Cone Bottom Scored|number
+tom|Cone Middle Scored|number
+tot|Cone Top Scored|number
+tdc|Robot Docked|bool
+teg|Robot Engaged|bool
+tpk|Robot Parked|bool
+cyc|Estimated Cycle Time|number
+n|Notes|string
