@@ -9,5 +9,7 @@ public:
     DatasetPage();
 
 private:
+    QStringList datasets;
+
     void handleSelection(QString path);
 };
