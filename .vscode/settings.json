@@ -2,6 +2,7 @@
     "files.associations": {
         "qmainwindow": "cpp",
         "ostream": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "qwidget": "cpp"
     }
 }

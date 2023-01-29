@@ -1,4 +1,4 @@
-#include <QWidget>
+#include <QComboBox>
 #include <QStringList>
 
 class DatasetPage : public QWidget
@@ -10,6 +10,7 @@ public:
 
 private:
     QStringList datasets;
+    QComboBox *datasetDropdown;
 
     void handleSelection(QString path);
 };

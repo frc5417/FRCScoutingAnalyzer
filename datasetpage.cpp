@@ -31,7 +31,7 @@ DatasetPage::DatasetPage()
     label->setContentsMargins(0, 0, 0, 20);
     layout->addWidget(label);
 
-    QComboBox *datasetDropdown = new QComboBox(this);
+    datasetDropdown = new QComboBox(this);
     datasetDropdown->setMinimumHeight(40);
     datasetDropdown->setStyleSheet("QWidget { border: 2px solid grey; border-radius: 5px; font-size: 24px; font-weight: 500; }");
     datasetDropdown->setContentsMargins(0, 20, 0, 0);
@@ -43,8 +43,10 @@ DatasetPage::DatasetPage()
         QTextStream in(&file);
         QString line = in.readLine();
         while (!line.isNull()) {
-            datasets.push_back(line);
-            datasetDropdown->addItem(line);
+            if (!line.isEmpty()) {
+                datasets.push_back(line);
+                datasetDropdown->addItem(line);
+            }
             line = in.readLine();
         }
     };
@@ -65,6 +67,11 @@ void DatasetPage::handleSelection(QString path)
     if (path == "Create New")
     {
         QString datasetFolder = QFileDialog::getExistingDirectory(0, ("Create New Dataset Folder"), QDir::homePath());
+
+        if (datasetFolder.isEmpty()) {
+            datasetDropdown->setCurrentIndex(0);
+            return;
+        };
 
         if (datasets.contains(datasetFolder)) {
             qDebug() << "Already in datasets";

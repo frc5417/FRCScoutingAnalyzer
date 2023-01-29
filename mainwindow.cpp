@@ -11,7 +11,15 @@
 
 #include <QDir>
 #include <QFile>
+#include <QDebug>
 #include <QTextStream>
+
+#include <algorithm>
+
+bool teamnumLessThan(TeamData* v1, TeamData* v2)
+{
+    return v1->teamNumber.toInt() < v2->teamNumber.toInt();
+}
 
 MainWindow::MainWindow(QString datasetPath)
     : QWidget()
@@ -46,6 +54,9 @@ MainWindow::MainWindow(QString datasetPath)
             }
             line = in.readLine();
         }
+        qSort(teamsData.begin(), teamsData.end(), teamnumLessThan);
+
+        datasetFile.close();
     };
 
     this->setStyleSheet("background-color: #2d2d2d; color: white;");
@@ -95,14 +106,14 @@ MainWindow::MainWindow(QString datasetPath)
     layout->addWidget(dataScroll, 2, 1, 5, 6);
 
     QWidget *dataScrollWdg = new QWidget(this);
-    dataScrollWdg->setStyleSheet("background-color: #5A5A5A; border-top-left-radius: 10px;");
+    dataScrollWdg->setStyleSheet("background-color: rgba(0, 0, 0, 0); border-top-left-radius: 10px;");
     dataScroll->setWidget(dataScrollWdg);
 
     dataScrollLayout = new QVBoxLayout(this);
     dataScrollLayout->setMargin(20);
     dataScrollLayout->setSpacing(20);
     dataScrollWdg->setLayout(dataScrollLayout);
-
+    
     updateTeamList();
 
     layout->setMargin(0);
@@ -111,11 +122,13 @@ MainWindow::MainWindow(QString datasetPath)
     this->setMinimumSize(640, 480);
 
     this->showFullScreen();
+
 };
 
 void MainWindow::makeInputDataWdg(QWidget *inputDataWdg)
 {
-    inputDataWdg->setStyleSheet("background-color: #2d2d2d; color: white; border-radius: 20px; font-size: 24px;");
+    inputDataWdg->setObjectName("mainBg");
+    inputDataWdg->setStyleSheet("QWidget[objectName^=\"mainBg\"] { background-color: rgba(0, 0, 0, 0.9); } QWidget { background-color: rgba(0, 0, 0, 0); color: white; border-radius: 20px; font-size: 24px; }");
     inputDataWdg->hide();
 
     QVBoxLayout *inputDataLayout = new QVBoxLayout(inputDataWdg);
@@ -247,6 +260,8 @@ void MainWindow::updateTeamData()
             }
         }
     }
+
+    qSort(teamsData.begin(), teamsData.end(), teamnumLessThan);
 }
 
 void MainWindow::updateTeamList()
@@ -262,6 +277,7 @@ void MainWindow::updateTeamList()
     {
         QWidget *main = new QWidget();
         main->setStyleSheet("background-color: #3c3c3c; border-radius: 10px;");
+        main->setMinimumHeight(300);
 
         QGridLayout *gridLayout = new QGridLayout(main);
 
@@ -278,6 +294,7 @@ void MainWindow::updateTeamList()
         QLabel *teleOpStats = new QLabel("Thing: 10\nThing2: 10");
         teleOpStats->setStyleSheet("font-size: 16px; font-weight: 500;");
         teleOpStats->setAlignment(Qt::AlignLeft);
+        
         gridLayout->addWidget(teleOpStats, 2, 0, 1, 1);
 
         QLabel *autoStatsLabel = new QLabel("Autonomous Stats");
