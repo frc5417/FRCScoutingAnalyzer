@@ -10,7 +10,7 @@ public:
 
 private:
     QStringList datasets;
-    QComboBox *datasetDropdown;
+    QComboBox * datasetDropdown;
 
     void handleSelection(QString path);
 };
