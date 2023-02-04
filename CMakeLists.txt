@@ -21,6 +21,7 @@ add_executable(${PROJECT_NAME}
   datasetpage.h
   mainwindow.cpp
   mainwindow.h
+  teamdata.h
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Widgets )
