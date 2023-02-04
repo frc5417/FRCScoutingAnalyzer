@@ -3,6 +3,7 @@
 #include <QMainWindow>
 #include <QVBoxLayout>
 #include <QStringList>
+#include <QLineEdit>
 #include <QList>
 
 class MainWindow : public QWidget
@@ -18,11 +19,15 @@ signals:
 
 private:
     void makeInputDataWdg(QWidget *inputDataWdg);
+    void handleSortSelection(QString sortBy);
     void updateTeamList();
     void updateTeamData();
     void saveData();
 
+    QString oldSort = "";
+
     QVBoxLayout *dataScrollLayout;
+    QLineEdit *inputDataBox;
 
     QString datasetFilePath;
     QStringList stringData;

@@ -16,7 +16,6 @@ tcm|Cube Middle Scored|number|3
 tct|Cube Top Scored|number|5
 tob|Cone Bottom Scored|number|2
 tom|Cone Middle Scored|number|3
-tol|Link|bool|5
 tot|Cone Top Scored|number|5
 tdc|Robot Docked|bool|6
 teg|Robot Engaged|bool|10

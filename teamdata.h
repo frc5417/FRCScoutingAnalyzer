@@ -29,8 +29,30 @@ public:
         return matchesData;
     }
 
+    void setAverages(float auton, float teleOP) {
+        averageAuton = auton;
+        averageTeleOP = teleOP;
+        averageTotal = auton + teleOP;
+    }
+
+    float getAutonAverage() {
+        return averageAuton;
+    }
+
+    float getTeleOPAverage() {
+        return averageTeleOP;
+    }
+
+    float getTotalAverage() {
+        return averageTotal;
+    }
+
 private:
     QStringList matchesData;
+
+    float averageAuton = 0.0;
+    float averageTeleOP = 0.0;
+    float averageTotal = 0.0;
 
 };
 

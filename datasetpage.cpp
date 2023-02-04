@@ -75,6 +75,7 @@ void DatasetPage::handleSelection(QString path)
 
         if (datasets.contains(datasetFolder)) {
             qDebug() << "Already in datasets";
+            datasetDropdown->setCurrentIndex(0);
             return;
         }
 
