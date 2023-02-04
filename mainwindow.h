@@ -29,4 +29,8 @@ private:
     QList<TeamData*> teamsData;
     QStringList teamsHaveData = QStringList();
 
+    QStringList teleopDatasetBreakdown = QStringList();
+    QStringList autonDatasetBreakdown = QStringList();
+    QStringList sortOptions = QStringList();
+
 };

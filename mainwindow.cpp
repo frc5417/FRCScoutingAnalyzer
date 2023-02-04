@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "util.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -16,7 +17,7 @@
 
 #include <algorithm>
 
-bool teamnumLessThan(TeamData* v1, TeamData* v2)
+static bool teamNumLessThan(TeamData* v1, TeamData* v2)
 {
     return v1->teamNumber.toInt() < v2->teamNumber.toInt();
 }
@@ -49,14 +50,47 @@ MainWindow::MainWindow(QString datasetPath)
                     TeamData *teamData = new TeamData(teamNum);
                     teamData->addToMatchData(line);
                     teamsData.push_back(teamData);
+                    teamsHaveData.push_back(teamNum);
                 }
                 stringData.push_back(line);
             }
             line = in.readLine();
         }
-        qSort(teamsData.begin(), teamsData.end(), teamnumLessThan);
+        qSort(teamsData.begin(), teamsData.end(), teamNumLessThan);
 
         datasetFile.close();
+    };
+
+    QFile databreakdownFile("../assets/databreakdown");
+    if (databreakdownFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream in(&databreakdownFile);
+        QString line = in.readLine();
+        bool isTeleOP = false;
+        bool isAuton = false;
+        while (!line.isNull()) {
+            if (line.startsWith("#") || line.isEmpty()) {}
+            else if (line == "auton") {
+                isAuton = true;
+                isTeleOP = false;
+            }
+            else if (line == "teleop") {
+                isTeleOP = true;
+                isAuton = false;
+            }
+            else {
+                if (isAuton) {
+                    autonDatasetBreakdown.append(line);
+                }
+                else if (isTeleOP) {
+                    teleopDatasetBreakdown.append(line);
+                }
+            }
+            
+            line = in.readLine();
+        }
+
+        databreakdownFile.close();
     };
 
     this->setStyleSheet("background-color: #2d2d2d; color: white;");
@@ -122,7 +156,6 @@ MainWindow::MainWindow(QString datasetPath)
     this->setMinimumSize(640, 480);
 
     this->showFullScreen();
-
 };
 
 void MainWindow::makeInputDataWdg(QWidget *inputDataWdg)
@@ -216,6 +249,7 @@ void MainWindow::makeInputDataWdg(QWidget *inputDataWdg)
 
         lastScannedData->setText("Match Number: " + matchNum + "\nTeam Number: " + teamNum);
     });
+
 }
 
 void MainWindow::saveData()
@@ -261,7 +295,7 @@ void MainWindow::updateTeamData()
         }
     }
 
-    qSort(teamsData.begin(), teamsData.end(), teamnumLessThan);
+    qSort(teamsData.begin(), teamsData.end(), teamNumLessThan);
 }
 
 void MainWindow::updateTeamList()
@@ -286,27 +320,91 @@ void MainWindow::updateTeamList()
         teamLabel->setAlignment(Qt::AlignCenter);
         gridLayout->addWidget(teamLabel, 0, 0, 1, 2);
 
-        QLabel *teleOpStatsLabel = new QLabel("TeleOP Stats");
-        teleOpStatsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
-        teleOpStatsLabel->setAlignment(Qt::AlignCenter);
-        gridLayout->addWidget(teleOpStatsLabel, 1, 0, 1, 1);
-
-        QLabel *teleOpStats = new QLabel("Thing: 10\nThing2: 10");
-        teleOpStats->setStyleSheet("font-size: 16px; font-weight: 500;");
-        teleOpStats->setAlignment(Qt::AlignLeft);
-        
-        gridLayout->addWidget(teleOpStats, 2, 0, 1, 1);
-
         QLabel *autoStatsLabel = new QLabel("Autonomous Stats");
         autoStatsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
         autoStatsLabel->setAlignment(Qt::AlignCenter);
-        gridLayout->addWidget(autoStatsLabel, 1, 1, 1, 1);
+        gridLayout->addWidget(autoStatsLabel, 1, 0, 1, 1);
 
-        QLabel *autoStats = new QLabel("Thing: 10\nThing2: 10");
+        QLabel *autoStats = new QLabel();
         autoStats->setStyleSheet("font-size: 16px; font-weight: 500;");
         autoStats->setAlignment(Qt::AlignLeft);
-        gridLayout->addWidget(autoStats, 2, 1, 1, 1);
+
+        QString autoStatsStr = "";
+        QStringList matchData = teamsData[i]->getMatchData();
+        for (int i = 0; i < autonDatasetBreakdown.size(); i++)
+        {
+            float total = 0.0;
+            QStringList args = autonDatasetBreakdown[i].split("|");
+            QString dataType = args[2];
+            if (dataType == "number" || dataType == "bool")
+            {
+                for (int l = 0; l < matchData.size(); l++)
+                {
+                    total += Util::findDouble(matchData[l], args[0]);
+                }
+                if(dataType == "number")
+                    autoStatsStr += args[1] + ": " + QString::number(total / matchData.size(), 10, 2) + "\n";
+                else
+                    autoStatsStr += args[1] + ": " + QString::number(total / matchData.size() * 100, 10, 1) + "%\n";
+            }
+            if (dataType == "string")
+            {
+                autoStatsStr += args[1] + ":\n";
+                for (int l = 0; l < matchData.size(); l++)
+                {
+                    QString value = Util::findString(matchData[l], args[0]);
+                    if (!value.isEmpty())
+                        autoStatsStr += Util::findString(matchData[l], "mn") + ": " + value + "\n";
+                }
+            }
+        }
+        autoStats->setText(autoStatsStr);
+
+        gridLayout->addWidget(autoStats, 2, 0, 1, 1);
+
+        QLabel *teleOpStatsLabel = new QLabel("TeleOP Stats");
+        teleOpStatsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
+        teleOpStatsLabel->setAlignment(Qt::AlignCenter);
+        gridLayout->addWidget(teleOpStatsLabel, 1, 1, 1, 1);
+
+        QLabel *teleOpStats = new QLabel();
+        teleOpStats->setStyleSheet("font-size: 16px; font-weight: 500;");
+        teleOpStats->setAlignment(Qt::AlignLeft);
+
+        QString teleopStatsStr = "";
+        for (int i = 0; i < teleopDatasetBreakdown.size(); i++)
+        {
+            float total = 0.0;
+            QStringList args = teleopDatasetBreakdown[i].split("|");
+            QString dataType = args[2];
+            if (dataType == "number" || dataType == "bool")
+            {
+                for (int l = 0; l < matchData.size(); l++)
+                {
+                    total += Util::findDouble(matchData[l], args[0]);
+                }
+                if(dataType == "number")
+                    teleopStatsStr += args[1] + ": " + QString::number(total / matchData.size(), 10, 2) + "\n";
+                else
+                    teleopStatsStr += args[1] + ": " + QString::number(total / matchData.size() * 100, 10, 1) + "%\n";
+            }
+            if (dataType == "string")
+            {
+                teleopStatsStr += args[1] + ":\n";
+                for (int l = 0; l < matchData.size(); l++)
+                {
+                    QString value = Util::findString(matchData[l], args[0]);
+                    if (!value.isEmpty())
+                        teleopStatsStr += Util::findString(matchData[l], "mn") + ": " + value + "\n";
+                }
+            }
+        }
+        
+        teleOpStats->setText(teleopStatsStr);
+        
+        gridLayout->addWidget(teleOpStats, 2, 1, 1, 1);
 
         dataScrollLayout->addWidget(main);
     }
+
 }

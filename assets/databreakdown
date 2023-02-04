@@ -1,6 +1,6 @@
 # FORMAT = id|Name|type|points|settings example: df|Defensive Skill|number|0|ignore=-1
 
-auto
+auton
 lc|Left Community|bool|3
 acb|Cube Bottom Scored|number|3
 acm|Cube Middle Scored|number|4

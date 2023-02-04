@@ -1,5 +1,10 @@
+#ifndef H_TEAMDATA
+#define H_TEAMDATA
+
 #include <QString>
 #include <QStringList>
+
+#include "util.h"
 
 class TeamData
 {
@@ -16,7 +21,17 @@ public:
         matchesData.push_back(matchData);
     }
 
+    void sortMatchData() {
+        qSort(matchesData.begin(), matchesData.end(), Util::matchNumLessThan);
+    }
+
+    QStringList getMatchData() {
+        return matchesData;
+    }
+
 private:
     QStringList matchesData;
 
 };
+
+#endif
