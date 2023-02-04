@@ -1,9 +1,11 @@
 #include "teamdata.h"
 
 #include <QMainWindow>
+#include <QScrollArea>
 #include <QVBoxLayout>
 #include <QStringList>
 #include <QLineEdit>
+#include <QHash>
 #include <QList>
 
 class MainWindow : public QWidget
@@ -26,6 +28,7 @@ private:
 
     QString oldSort = "";
 
+    QScrollArea *dataScroll;
     QVBoxLayout *dataScrollLayout;
     QLineEdit *inputDataBox;
 
@@ -33,6 +36,7 @@ private:
     QStringList stringData;
     QList<TeamData*> teamsData;
     QStringList teamsHaveData = QStringList();
+    QHash<QString, int> teamsVPos;
 
     QStringList teleopDatasetBreakdown = QStringList();
     QStringList autonDatasetBreakdown = QStringList();

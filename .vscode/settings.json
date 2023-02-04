@@ -3,6 +3,7 @@
         "qmainwindow": "cpp",
         "ostream": "cpp",
         "ratio": "cpp",
-        "qwidget": "cpp"
+        "qwidget": "cpp",
+        "qhash": "cpp"
     }
 }

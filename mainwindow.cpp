@@ -13,6 +13,7 @@
 
 #include <QDir>
 #include <QFile>
+#include <QHash>
 #include <QDebug>
 #include <QTextStream>
 
@@ -189,7 +190,7 @@ MainWindow::MainWindow(QString datasetPath)
     titleLabel->setMaximumHeight(150);
     layout->addWidget(titleLabel, 0, 1, 1, 6);
     
-    QScrollArea *dataScroll = new QScrollArea(this);
+    dataScroll = new QScrollArea(this);
     dataScroll->setStyleSheet("background-color: #5A5A5A; border-top-left-radius: 10px;");
     dataScroll->verticalScrollBar()->setStyleSheet("QScrollBar { border: none; background-color: #ffffff; color: black; width: 16px } QScrollBar::handle { background-color: #2d2d2d; }");
     dataScroll->setWidgetResizable( true );
@@ -203,6 +204,49 @@ MainWindow::MainWindow(QString datasetPath)
     dataScrollLayout->setMargin(20);
     dataScrollLayout->setSpacing(20);
     dataScrollWdg->setLayout(dataScrollLayout);
+
+    QWidget *searchContainer = new QWidget(this);
+    searchContainer->setMaximumWidth(200);
+    QHBoxLayout *searchContainerLayout = new QHBoxLayout(searchContainer);
+    searchContainerLayout->setAlignment(Qt::AlignVCenter);
+
+    QLabel *searchLabel = new QLabel(this);
+    searchLabel->setAlignment(Qt::AlignVCenter);
+    searchLabel->setPixmap(QPixmap::fromImage(QImage("../assets/searchIcon.png")));
+    searchLabel->setScaledContents(true);
+    searchLabel->setMaximumSize(30, 30);
+    searchLabel->setStyleSheet("font-size: 24px; font-weight: 700;");
+    searchLabel->setAlignment(Qt::AlignCenter);
+    searchContainerLayout->addWidget(searchLabel);
+
+    QLineEdit *searchInput = new QLineEdit(this);
+    searchInput->setValidator( new QIntValidator(0, 9999, this) );
+    searchInput->setMinimumHeight(50);
+    searchInput->setStyleSheet("QWidget { border: 2px solid grey; font-size: 18px; font-weight: 500; text-align: center; } ");
+    searchInput->setContentsMargins(10, 0, 0, 0);
+    searchInput->setPlaceholderText("Team #");
+    searchContainerLayout->addWidget(searchInput);
+
+    connect(searchInput, &QLineEdit::textChanged, [=]() {
+        QStringList keys = teamsVPos.keys();
+        QList<int> values = teamsVPos.values();
+        
+        if (searchInput->text().isEmpty())
+        {
+            dataScroll->verticalScrollBar()->setSliderPosition(0);
+            return;
+        }
+
+        for (int i = 0; i < teamsVPos.size(); i++)
+        {
+            if (keys[i].startsWith(searchInput->text())) {
+                dataScroll->verticalScrollBar()->setSliderPosition(values[i]);
+                break;
+            }
+        }
+    });
+
+    layout->addWidget(searchContainer, 3, 0, 1, 1);
     
     updateTeamList();
 
@@ -363,6 +407,8 @@ void MainWindow::updateTeamList()
         delete item;
     }
 
+    teamsVPos.clear();
+
     for (int i = 0; i < teamsData.count(); i++)
     {
         QWidget *main = new QWidget();
@@ -484,6 +530,8 @@ void MainWindow::updateTeamList()
         teamsData[i]->setAverages(totalAuton, totalTeleOP);
 
         dataScrollLayout->addWidget(main);
+
+        teamsVPos.insert(teamsData[i]->teamNumber, 400 * i);
     }
 
 }
