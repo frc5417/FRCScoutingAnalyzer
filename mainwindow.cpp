@@ -73,7 +73,7 @@ MainWindow::MainWindow(QString datasetPath)
             }
             line = in.readLine();
         }
-        qSort(teamsData.begin(), teamsData.end(), teamNumLessThan);
+        std::sort(teamsData.begin(), teamsData.end(), teamNumLessThan);
 
         datasetFile.close();
     };
@@ -127,10 +127,33 @@ MainWindow::MainWindow(QString datasetPath)
     makeInputDataWdg(inputDataWdg);
 
     QPushButton *inputDataButton = new QPushButton(this);
-    inputDataButton->setStyleSheet("background-color: #BE1E2D; padding: 10px; border-radius: 15px; margin: 10px;");
+    inputDataButton->setStyleSheet("background-color: #BE1E2D; padding: 10px; border-radius: 15px; margin: 10px; font-size: 18px;");
     inputDataButton->setText("Input Data");
     inputDataButton->setFocusPolicy(Qt::FocusPolicy::NoFocus);
     layout->addWidget(inputDataButton, 6, 0, 1, 1);
+
+    QWidget *filterDataWdg = new QWidget(this);
+
+    makeFilterWdg(filterDataWdg);
+
+    QPushButton *filterBtn = new QPushButton(this);
+    filterBtn->setStyleSheet("background-color: #BE1E2D; padding: 10px; border-radius: 15px; margin: 10px; font-size: 18px;");
+    filterBtn->setText("Filter Data");
+    filterBtn->setFocusPolicy(Qt::FocusPolicy::NoFocus);
+    filterBtn->show();
+    layout->addWidget(filterBtn, 5, 0, 1, 1);
+
+    connect(filterBtn, &QAbstractButton::clicked, [=]() {
+        if(filterDataWdg->isVisible()) {
+            filterDataWdg->hide();
+        } else {
+            filterDataWdg->setGeometry(width() / 4, height() / 4, width() / 2, height() / 2);
+            filterDataWdg->show();
+            filterDataWdg->raise();
+
+            inputDataWdg->hide();
+        }
+    });
 
     QWidget *sortContainer = new QWidget(this);
     QVBoxLayout *sortContainerLayout = new QVBoxLayout(sortContainer);
@@ -167,10 +190,6 @@ MainWindow::MainWindow(QString datasetPath)
 
     sortContainerLayout->addWidget(sortByDropdown);
 
-    connect(sortByDropdown, &QComboBox::currentTextChanged, this, &MainWindow::handleSortSelection);
-
-    layout->addWidget(sortContainer, 4, 0, 1, 1);
-
     connect(inputDataButton, &QAbstractButton::clicked, [=]() {
         if (inputDataWdg->isVisible()) {
             inputDataWdg->hide();
@@ -181,7 +200,13 @@ MainWindow::MainWindow(QString datasetPath)
         inputDataWdg->show();
         inputDataWdg->raise();
         inputDataBox->setFocus(Qt::FocusReason::MouseFocusReason);
+
+        filterDataWdg->hide();
     });
+
+    connect(sortByDropdown, &QComboBox::currentTextChanged, this, &MainWindow::handleSortSelection);
+
+    layout->addWidget(sortContainer, 4, 0, 1, 1);
 
     QLabel *titleLabel = new QLabel(this);
     titleLabel->setStyleSheet("background-color: #000000; font-size: 24px; text-align: center; font-weight: 500; border-bottom-left-radius: 10px;");
@@ -253,7 +278,7 @@ MainWindow::MainWindow(QString datasetPath)
     layout->setMargin(0);
     this->setLayout(layout);
 
-    this->setMinimumSize(640, 480);
+    this->setMinimumSize(1280, 720);
 
     this->showFullScreen();
 };
@@ -351,6 +376,76 @@ void MainWindow::makeInputDataWdg(QWidget *inputDataWdg)
 
 }
 
+void MainWindow::makeFilterWdg(QWidget *filterDataWdg)
+{
+    filterDataWdg->setObjectName("mainBg");
+    filterDataWdg->setStyleSheet("QWidget[objectName^=\"mainBg\"] { background-color: rgba(0, 0, 0, 0.9); } QWidget { background-color: rgba(0, 0, 0, 0); color: white; border-radius: 20px; font-size: 24px; }");
+    filterDataWdg->hide();
+
+    QVBoxLayout *filterDataLayout = new QVBoxLayout(filterDataWdg);
+    filterDataWdg->setLayout(filterDataLayout);
+
+    QLabel *titleFilterData = new QLabel(filterDataWdg);
+    titleFilterData->setText("Filter Data:");
+    titleFilterData->setStyleSheet("font-weight: 700;");
+    titleFilterData->setAlignment(Qt::AlignCenter);
+    filterDataLayout->addWidget(titleFilterData);
+
+    QLabel *ignoreWorstLabel = new QLabel(filterDataWdg);
+    ignoreWorstLabel->setText("# of Worst Matches to Ignore:");
+    ignoreWorstLabel->setStyleSheet("font-weight: 700;");
+    ignoreWorstLabel->setAlignment(Qt::AlignCenter);
+    filterDataLayout->addWidget(ignoreWorstLabel);
+
+    QLineEdit *ignoreWorstBox = new QLineEdit(filterDataWdg);
+    ignoreWorstBox->setStyleSheet("background-color: #BE1E2D; padding: 10px; border-radius: 15px;");
+    ignoreWorstBox->setPlaceholderText("0");
+    ignoreWorstBox->setValidator( new QIntValidator(0, 99, this) );
+    filterDataLayout->addWidget(ignoreWorstBox);
+
+    QLabel *ignoreMatchesLabel = new QLabel(filterDataWdg);
+    ignoreMatchesLabel->setText("Ignore Matches Before Round:");
+    ignoreMatchesLabel->setStyleSheet("font-weight: 700;");
+    ignoreMatchesLabel->setAlignment(Qt::AlignCenter);
+    filterDataLayout->addWidget(ignoreMatchesLabel);
+
+    QLineEdit *ignoreMatchesBox = new QLineEdit(filterDataWdg);
+    ignoreMatchesBox->setStyleSheet("background-color: #BE1E2D; padding: 10px; border-radius: 15px;");
+    ignoreMatchesBox->setValidator( new QIntValidator(0, 999, this) );
+    ignoreMatchesBox->setPlaceholderText("0");
+    filterDataLayout->addWidget(ignoreMatchesBox);
+
+    QWidget *applyFilterContainer = new QWidget(filterDataWdg);
+    QHBoxLayout *applyFilterLayout = new QHBoxLayout(filterDataWdg);
+    applyFilterContainer->setLayout(applyFilterLayout);
+
+    QPushButton *applyFilter = new QPushButton(filterDataWdg);
+    applyFilter->setStyleSheet("background-color: #BE1E2D; padding: 10px; border-radius: 15px;");
+    applyFilter->setText("Apply");
+    applyFilter->setMaximumWidth(200);
+    applyFilter->setContentsMargins(0, 0, 0, 100);
+    applyFilterLayout->addWidget(applyFilter);
+    filterDataLayout->addWidget(applyFilterContainer);
+
+    connect(applyFilter, &QAbstractButton::clicked, [=]() {
+        filterDataWdg->hide();
+
+        int ignoreWorst = (ignoreWorstBox->text().isEmpty() ? 0 : ignoreWorstBox->text().toInt());
+        int ignoreMatches = (ignoreMatchesBox->text().isEmpty() ? 0 : ignoreMatchesBox->text().toInt());
+        qDebug() << ignoreWorst << "" << ignoreMatches;
+
+        qDebug() << teamsData.count();
+
+        for (int i = 0; i < teamsData.count(); i++)
+        {
+            teamsData[i]->filterData(ignoreWorst, ignoreMatches, teleopDatasetBreakdown, autonDatasetBreakdown);
+        } 
+
+        updateTeamList();
+    });
+
+}
+
 void MainWindow::saveData()
 {
     QFile datasetFile = QFile(datasetFilePath);
@@ -411,6 +506,8 @@ void MainWindow::updateTeamList()
 
     for (int i = 0; i < teamsData.count(); i++)
     {
+        if (teamsData[i]->getMatchData().count() == 0) continue;
+
         QWidget *main = new QWidget();
         main->setStyleSheet("background-color: #3c3c3c; border-radius: 10px;");
         main->setMinimumHeight(400);
@@ -443,7 +540,7 @@ void MainWindow::updateTeamList()
         for (int i = 0; i < autonDatasetBreakdown.size(); i++)
         {
             float total = 0.0;
-            QStringList args = autonDatasetBreakdown[i].split("|");
+            QStringList args = autonDatasetBreakdown.at(i).split("|");
             QString dataType = args[2];
             float pointsWorth = args.length() > 3 ? args[3].toFloat() : 0.0;
             if (dataType == "number" || dataType == "bool")
@@ -492,7 +589,7 @@ void MainWindow::updateTeamList()
         for (int i = 0; i < teleopDatasetBreakdown.size(); i++)
         {            
             float total = 0.0;
-            QStringList args = teleopDatasetBreakdown[i].split("|");
+            QStringList args = teleopDatasetBreakdown.at(i).split("|");
             QString dataType = args[2];
             float pointsWorth = args.length() > 3 ? args[3].toFloat() : 0.0;
             if (dataType == "number" || dataType == "bool")
@@ -544,19 +641,19 @@ void MainWindow::handleSortSelection(QString sortBy)
     }
 
     if (sortBy == "Team Number") {
-        qSort(teamsData.begin(), teamsData.end(), teamNumLessThan);
+        std::sort(teamsData.begin(), teamsData.end(), teamNumLessThan);
     } else if (sortBy == "Total Points") {
-        qSort(teamsData.begin(), teamsData.end(), totalPointsDesc);
+        std::sort(teamsData.begin(), teamsData.end(), totalPointsDesc);
     } else if (sortBy == "Auton Points") {
-        qSort(teamsData.begin(), teamsData.end(), autonPointsDesc);
+        std::sort(teamsData.begin(), teamsData.end(), autonPointsDesc);
     } else if (sortBy == "TeleOP Points") {
-        qSort(teamsData.begin(), teamsData.end(), teleopPointsDesc);
+        std::sort(teamsData.begin(), teamsData.end(), teleopPointsDesc);
     } else {
         for (int i = 0; i < sortOptions.size(); i++)
         {
             if (sortOptions[i].split("|")[0] == sortBy) {
                 QStringList keys = sortOptions[i].split("|").length() > 1 ? sortOptions[i].split("|")[1].split(",") : QStringList() << "tn";
-                qSort(teamsData.begin(), teamsData.end(), [=](TeamData* v1, TeamData* v2) {
+                std::sort(teamsData.begin(), teamsData.end(), [=](TeamData* v1, TeamData* v2) {
                     float total1 = 0.0;
                     float total2 = 0.0;
                     QStringList matchData1 = v1->getMatchData();

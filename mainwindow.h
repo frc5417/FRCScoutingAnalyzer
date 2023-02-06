@@ -5,6 +5,7 @@
 #include <QVBoxLayout>
 #include <QStringList>
 #include <QLineEdit>
+#include <QString>
 #include <QHash>
 #include <QList>
 
@@ -20,6 +21,7 @@ signals:
     void requestUpdateData(QStringList data);
 
 private:
+    void makeFilterWdg(QWidget *filterDataWdg);
     void makeInputDataWdg(QWidget *inputDataWdg);
     void handleSortSelection(QString sortBy);
     void updateTeamList();
@@ -38,8 +40,8 @@ private:
     QStringList teamsHaveData = QStringList();
     QHash<QString, int> teamsVPos;
 
-    QStringList teleopDatasetBreakdown = QStringList();
-    QStringList autonDatasetBreakdown = QStringList();
+    QList<QString> teleopDatasetBreakdown = QList<QString>();
+    QList<QString> autonDatasetBreakdown = QList<QString>();
     QStringList sortOptions = QStringList();
 
 };
