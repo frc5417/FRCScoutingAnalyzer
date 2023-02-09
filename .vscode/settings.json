@@ -4,6 +4,8 @@
         "ostream": "cpp",
         "ratio": "cpp",
         "qwidget": "cpp",
-        "qhash": "cpp"
+        "qhash": "cpp",
+        "chrono": "cpp",
+        "algorithm": "cpp"
     }
 }

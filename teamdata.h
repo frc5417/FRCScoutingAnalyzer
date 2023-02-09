@@ -6,6 +6,7 @@
 #include <QStringList>
 
 #include "util.h"
+#include "qcustomplot/qcustomplot.h"
 
 using namespace std::placeholders;
 
@@ -119,6 +120,18 @@ public:
         return averageTotal;
     }
 
+    QCustomPlot* getCustomPlotAuton() {
+        return customPlotAuton;
+    }
+
+    void setCustomPlotAuton(QCustomPlot *plot) {
+        if (customPlotAuton != nullptr) {
+            customPlotAuton->deleteLater();
+        }
+        
+        customPlotAuton = plot;
+    }
+
 private:
     QStringList originalMatchData;
     QStringList matchesData;
@@ -126,6 +139,8 @@ private:
     float averageAuton = 0.0;
     float averageTeleOP = 0.0;
     float averageTotal = 0.0;
+
+    QCustomPlot *customPlotAuton = nullptr;
 
 };
 

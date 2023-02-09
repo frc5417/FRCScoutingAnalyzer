@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "qcustomplot/qcustomplot.h"
 #include "util.h"
 
 #include <QVBoxLayout>
@@ -15,6 +16,7 @@
 #include <QFile>
 #include <QHash>
 #include <QDebug>
+#include <QVector>
 #include <QTextStream>
 
 #include <algorithm>
@@ -110,6 +112,38 @@ MainWindow::MainWindow(QString datasetPath)
         databreakdownFile.close();
     };
 
+    QFile plotOptionsFile("../assets/plotoptions");
+    if (plotOptionsFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream in(&plotOptionsFile);
+        QString line = in.readLine();
+        bool isTeleOP = false;
+        bool isAuton = false;
+        while (!line.isNull()) {
+            if (line.startsWith("#") || line.isEmpty()) {}
+            else if (line == "auton") {
+                isAuton = true;
+                isTeleOP = false;
+            }
+            else if (line == "teleop") {
+                isTeleOP = true;
+                isAuton = false;
+            }
+            else {
+                if (isAuton) {
+                    autonPlotOptions.append(line);
+                }
+                else if (isTeleOP) {
+                    teleopPlotOptions.append(line);
+                }
+            }
+            
+            line = in.readLine();
+        }
+
+        plotOptionsFile.close();
+    };
+
     this->setStyleSheet("background-color: #2d2d2d; color: white;");
 
     QGridLayout *layout = new QGridLayout(this);
@@ -121,6 +155,17 @@ MainWindow::MainWindow(QString datasetPath)
     logoLabel->setScaledContents(true);
     logoLabel->setMaximumSize(150, 150);
     layout->addWidget(logoLabel, 0, 0, 1, 1);
+
+    QWidget *graphOptionsWdg = new QWidget(this);
+
+    makeGraphWdg(graphOptionsWdg);
+
+    QPushButton *graphOptionsBtn = new QPushButton(this);
+    graphOptionsBtn->setStyleSheet("background-color: #BE1E2D; padding: 10px; border-radius: 15px; margin: 10px; font-size: 18px;");
+    graphOptionsBtn->setText("Graph Options");
+    graphOptionsBtn->setFocusPolicy(Qt::FocusPolicy::NoFocus);
+    graphOptionsBtn->show();
+    layout->addWidget(graphOptionsBtn, 2, 0, 1, 1);
 
     QWidget *inputDataWdg = new QWidget(this);
 
@@ -152,6 +197,7 @@ MainWindow::MainWindow(QString datasetPath)
             filterDataWdg->raise();
 
             inputDataWdg->hide();
+            graphOptionsWdg->hide();
         }
     });
 
@@ -190,6 +236,19 @@ MainWindow::MainWindow(QString datasetPath)
 
     sortContainerLayout->addWidget(sortByDropdown);
 
+    connect(graphOptionsBtn, &QAbstractButton::clicked, [=]() {
+        if(graphOptionsWdg->isVisible()) {
+            graphOptionsWdg->hide();
+        } else {
+            graphOptionsWdg->setGeometry(width() / 4, height() / 4, width() / 2, height() / 2);
+            graphOptionsWdg->show();
+            graphOptionsWdg->raise();
+
+            inputDataWdg->hide();
+            filterDataWdg->hide();
+        }
+    });
+
     connect(inputDataButton, &QAbstractButton::clicked, [=]() {
         if (inputDataWdg->isVisible()) {
             inputDataWdg->hide();
@@ -202,6 +261,7 @@ MainWindow::MainWindow(QString datasetPath)
         inputDataBox->setFocus(Qt::FocusReason::MouseFocusReason);
 
         filterDataWdg->hide();
+        graphOptionsWdg->hide();
     });
 
     connect(sortByDropdown, &QComboBox::currentTextChanged, this, &MainWindow::handleSortSelection);
@@ -432,9 +492,6 @@ void MainWindow::makeFilterWdg(QWidget *filterDataWdg)
 
         int ignoreWorst = (ignoreWorstBox->text().isEmpty() ? 0 : ignoreWorstBox->text().toInt());
         int ignoreMatches = (ignoreMatchesBox->text().isEmpty() ? 0 : ignoreMatchesBox->text().toInt());
-        qDebug() << ignoreWorst << "" << ignoreMatches;
-
-        qDebug() << teamsData.count();
 
         for (int i = 0; i < teamsData.count(); i++)
         {
@@ -443,7 +500,135 @@ void MainWindow::makeFilterWdg(QWidget *filterDataWdg)
 
         updateTeamList();
     });
+}
 
+void MainWindow::makeGraphWdg(QWidget *graphWdg)
+{
+    graphWdg->setObjectName("graphBg");
+    graphWdg->setStyleSheet("QWidget[objectName^=\"graphBg\"] { background-color: rgba(0, 0, 0, 0.9); } QWidget { background-color: rgba(0, 0, 0, 0); color: white; border-radius: 20px; font-size: 24px; }");
+    graphWdg->hide();
+
+    QGridLayout *graphWdgLayout = new QGridLayout(graphWdg);
+    graphWdg->setLayout(graphWdgLayout);
+
+    QLabel *titleGraphOptions = new QLabel(graphWdg);
+    titleGraphOptions->setText("Graph Options:");
+    titleGraphOptions->setStyleSheet("font-weight: 700;");
+    titleGraphOptions->setAlignment(Qt::AlignCenter);
+    graphWdgLayout->addWidget(titleGraphOptions, 0, 0, 1, 4);
+
+    QLabel *autonGraphLabel = new QLabel(graphWdg);
+    autonGraphLabel->setText("Auton Graphs:");
+    autonGraphLabel->setStyleSheet("font-weight: 700;");
+    autonGraphLabel->setAlignment(Qt::AlignCenter);
+    graphWdgLayout->addWidget(autonGraphLabel, 1, 0, 2, 2);
+
+    int maxRow = 2;
+
+    QList<QCheckBox*> checkBoxes = QList<QCheckBox*>();
+
+    for (int i = 0; i < autonPlotOptions.size(); i++) {
+        QStringList args = autonPlotOptions[i].split("|");
+        QCheckBox *checkBox = new QCheckBox(graphWdg);
+        checkBox->setObjectName(autonPlotOptions[i]);
+        checkBox->setStyleSheet("QCheckBox::indicator { width: 65px; height: 65px; }");
+        checkBox->setFixedHeight(60);
+        checkBoxes.append(checkBox);
+        graphWdgLayout->addWidget(checkBox, 2 + i, 0, 1, 1);
+
+        QLabel *autonPlotLabel = new QLabel(args[0], graphWdg);
+        autonPlotLabel->setStyleSheet("font-weight: 500; font-size: 16px; color: white;");
+        autonPlotLabel->setAlignment(Qt::AlignCenter);
+        graphWdgLayout->addWidget(autonPlotLabel, 2 + i, 1, 1, 1);
+
+        if (2 + i > maxRow) maxRow = 2 + i;
+    }
+
+    QLabel *teleopGraphLabel = new QLabel(graphWdg);
+    teleopGraphLabel->setText("TeleOP Graphs:");
+    teleopGraphLabel->setStyleSheet("font-weight: 700;");
+    teleopGraphLabel->setAlignment(Qt::AlignCenter);
+    graphWdgLayout->addWidget(teleopGraphLabel, 1, 2, 2, 2);
+
+    for (int i = 0; i < teleopPlotOptions.size(); i++) {
+        QStringList args = teleopPlotOptions[i].split("|");
+        QCheckBox *checkBox = new QCheckBox(graphWdg);
+        checkBox->setObjectName(teleopPlotOptions[i]);
+        checkBox->setStyleSheet("QCheckBox::indicator { width: 65px; height: 65px; }");
+        checkBox->setFixedHeight(60);
+        checkBoxes.append(checkBox);
+        graphWdgLayout->addWidget(checkBox, 2 + i, 2, 1, 1);
+
+        QLabel *autonPlotLabel = new QLabel(args[0], graphWdg);
+        autonPlotLabel->setStyleSheet("font-weight: 500; font-size: 16px; color: white;");
+        autonPlotLabel->setAlignment(Qt::AlignCenter);
+        graphWdgLayout->addWidget(autonPlotLabel, 2 + i, 3, 1, 1);
+
+        if (2 + i > maxRow) maxRow = 2 + i;
+    }
+
+    QWidget *applyGraphContainer = new QWidget(graphWdg);
+    QHBoxLayout *applyGraphLayout = new QHBoxLayout(applyGraphContainer);
+    applyGraphContainer->setLayout(applyGraphLayout);
+
+    QPushButton *applyGraph = new QPushButton(graphWdg);
+    applyGraph->setStyleSheet("background-color: #BE1E2D; padding: 10px; border-radius: 15px;");
+    applyGraph->setText("Apply");
+    applyGraph->setMaximumWidth(200);
+    applyGraph->setContentsMargins(0, 0, 0, 100);
+    applyGraphLayout->addWidget(applyGraph);
+    graphWdgLayout->addWidget(applyGraphContainer, maxRow + 1, 0, 1, 4);
+
+    connect(applyGraph, &QAbstractButton::clicked, [=]() {
+        graphWdg->hide();
+
+        // assume its auton:
+        for (int i = 0; i < teamsData.count(); i++)
+        {
+            qDebug() << teamsData[i]->teamNumber;
+
+            int graphNum = 0;
+            QCustomPlot* teamPlot = teamsData[i]->getCustomPlotAuton();
+            teamPlot->clearGraphs();
+
+            QStringList matchData = teamsData[i]->getMatchData();
+            int matchSize = matchData.size();
+
+            for (int j = 0; j < checkBoxes.size(); j++)
+            {
+                if (checkBoxes[j]->isChecked()) {
+                    qDebug() << "CHECKED";
+                    QString plotOption = checkBoxes[j]->objectName();
+                    QStringList plotOptionArgs = plotOption.split("|");
+                    QStringList plotSourceArgs = plotOptionArgs[1].split(",");
+
+                    QVector<double> x(matchSize), y(matchSize);
+                    for (int l = 0; l < matchSize; l++)
+                    {
+                        x[l] = l; //Util::findDouble(matchData[l], "mn");
+                        double yVal = 0.0;
+                        for (int k = 0; k < plotSourceArgs.size(); k++) {
+                            yVal += Util::findDouble(matchData[l], plotSourceArgs[k]);
+                        }
+                        y[l] = yVal;
+                    }
+                    
+                    teamPlot->addGraph();
+                    teamPlot->graph(graphNum)->setData(x, y);
+                    // give the axes some labels:
+                    teamPlot->xAxis->setLabel("Matches");
+                    teamPlot->yAxis->setLabel(plotOptionArgs[0]);
+                    // set axes ranges, so we see all data:
+                    teamPlot->xAxis->setRange(0, matchSize);
+                    teamPlot->yAxis->setRange(plotOptionArgs[2].toInt(), plotOptionArgs[3].toInt());
+                    teamPlot->replot();
+                    teamPlot->show();
+
+                    graphNum += 1;
+                }
+            }
+        }
+    });
 }
 
 void MainWindow::saveData()
@@ -517,17 +702,22 @@ void MainWindow::updateTeamList()
         QLabel *teamLabel = new QLabel("Team " + teamsData[i]->teamNumber);
         teamLabel->setStyleSheet("font-size: 20px; font-weight: 700;");
         teamLabel->setAlignment(Qt::AlignCenter);
-        gridLayout->addWidget(teamLabel, 0, 0, 1, 2);
+        gridLayout->addWidget(teamLabel, 0, 0, 1, 4);
         
         QLabel *totalPointsLabel = new QLabel("Total Points ");
         totalPointsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
         totalPointsLabel->setAlignment(Qt::AlignCenter);
-        gridLayout->addWidget(totalPointsLabel, 1, 0, 1, 2);
+        gridLayout->addWidget(totalPointsLabel, 1, 0, 1, 4);
 
         QLabel *autoStatsLabel = new QLabel("Autonomous Stats");
         autoStatsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
         autoStatsLabel->setAlignment(Qt::AlignCenter);
-        gridLayout->addWidget(autoStatsLabel, 2, 0, 1, 1);
+        gridLayout->addWidget(autoStatsLabel, 2, 0, 1, 2);
+
+        QCustomPlot *customPlotAuton = new QCustomPlot(this);
+        teamsData[i]->setCustomPlotAuton(customPlotAuton);
+        customPlotAuton->hide();
+        gridLayout->addWidget(customPlotAuton, 3, 1, 1, 1);
 
         QLabel *autoStats = new QLabel();
         autoStats->setStyleSheet("font-size: 16px; font-weight: 500;");
@@ -577,7 +767,7 @@ void MainWindow::updateTeamList()
         QLabel *teleOpStatsLabel = new QLabel("TeleOP Stats");
         teleOpStatsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
         teleOpStatsLabel->setAlignment(Qt::AlignCenter);
-        gridLayout->addWidget(teleOpStatsLabel, 2, 1, 1, 1);
+        gridLayout->addWidget(teleOpStatsLabel, 2, 2, 1, 2);
 
         QLabel *teleOpStats = new QLabel();
         teleOpStats->setStyleSheet("font-size: 16px; font-weight: 500;");
@@ -619,7 +809,7 @@ void MainWindow::updateTeamList()
         }
         
         teleOpStats->setText(teleopStatsStr);
-        gridLayout->addWidget(teleOpStats, 3, 1, 1, 1);
+        gridLayout->addWidget(teleOpStats, 3, 2, 1, 1);
 
         teleOpStatsLabel->setText("TeleOP Stats - " + QString::number(totalTeleOP, 10, 1) + " Average Points");
         totalPointsLabel->setText("Total Average Points - " + QString::number(totalTeleOP + totalAuton, 10, 1) + " | Matches Recorded: " + QString::number(matchData.size()));

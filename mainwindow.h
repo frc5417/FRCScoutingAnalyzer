@@ -21,6 +21,7 @@ signals:
     void requestUpdateData(QStringList data);
 
 private:
+    void makeGraphWdg(QWidget *graphWdg);
     void makeFilterWdg(QWidget *filterDataWdg);
     void makeInputDataWdg(QWidget *inputDataWdg);
     void handleSortSelection(QString sortBy);
@@ -43,5 +44,7 @@ private:
     QList<QString> teleopDatasetBreakdown = QList<QString>();
     QList<QString> autonDatasetBreakdown = QList<QString>();
     QStringList sortOptions = QStringList();
+    QStringList autonPlotOptions = QStringList();
+    QStringList teleopPlotOptions = QStringList();
 
 };

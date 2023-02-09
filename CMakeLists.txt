@@ -17,7 +17,7 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Widgets PrintSupport REQUIRED)
 
 add_executable(${PROJECT_NAME}
   main.cpp
@@ -26,6 +26,8 @@ add_executable(${PROJECT_NAME}
   mainwindow.cpp
   mainwindow.h
   teamdata.h
+  qcustomplot/qcustomplot.cpp
+  qcustomplot/qcustomplot.h
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Widgets )
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Widgets Qt5::PrintSupport )
