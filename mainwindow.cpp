@@ -525,7 +525,7 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
 
     int maxRow = 2;
 
-    QList<QCheckBox*> checkBoxes = QList<QCheckBox*>();
+    QList<QCheckBox*> autonCheckBoxes = QList<QCheckBox*>();
 
     for (int i = 0; i < autonPlotOptions.size(); i++) {
         QStringList args = autonPlotOptions[i].split("|");
@@ -533,8 +533,18 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
         checkBox->setObjectName(autonPlotOptions[i]);
         checkBox->setStyleSheet("QCheckBox::indicator { width: 65px; height: 65px; }");
         checkBox->setFixedHeight(60);
-        checkBoxes.append(checkBox);
+        autonCheckBoxes.append(checkBox);
         graphWdgLayout->addWidget(checkBox, 2 + i, 0, 1, 1);
+
+        connect(checkBox, &QAbstractButton::clicked, [=]() {
+            QCheckBox* checkBox2 = qobject_cast<QCheckBox*>(sender());
+            qDebug() << checkBox2;
+            if (!checkBox2->isChecked()) return;
+            for(int i = 0; i < autonCheckBoxes.length(); i++) {
+                autonCheckBoxes[i]->setChecked(false);
+            }
+            checkBox2->setChecked(true);
+        });
 
         QLabel *autonPlotLabel = new QLabel(args[0], graphWdg);
         autonPlotLabel->setStyleSheet("font-weight: 500; font-size: 16px; color: white;");
@@ -543,6 +553,8 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
 
         if (2 + i > maxRow) maxRow = 2 + i;
     }
+
+    QList<QCheckBox*> teleopCheckBoxes = QList<QCheckBox*>();
 
     QLabel *teleopGraphLabel = new QLabel(graphWdg);
     teleopGraphLabel->setText("TeleOP Graphs:");
@@ -556,8 +568,17 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
         checkBox->setObjectName(teleopPlotOptions[i]);
         checkBox->setStyleSheet("QCheckBox::indicator { width: 65px; height: 65px; }");
         checkBox->setFixedHeight(60);
-        checkBoxes.append(checkBox);
+        teleopCheckBoxes.append(checkBox);
         graphWdgLayout->addWidget(checkBox, 2 + i, 2, 1, 1);
+
+        connect(checkBox, &QAbstractButton::clicked, [=]() {
+            QCheckBox* checkBox2 = qobject_cast<QCheckBox*>(sender());
+            if (!checkBox2->isChecked()) return;
+            for(int i = 0; i < teleopCheckBoxes.length(); i++) {
+                teleopCheckBoxes[i]->setChecked(false);
+            }
+            checkBox2->setChecked(true);
+        });
 
         QLabel *autonPlotLabel = new QLabel(args[0], graphWdg);
         autonPlotLabel->setStyleSheet("font-weight: 500; font-size: 16px; color: white;");
@@ -585,20 +606,18 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
         // assume its auton:
         for (int i = 0; i < teamsData.count(); i++)
         {
-            qDebug() << teamsData[i]->teamNumber;
-
-            int graphNum = 0;
-            QCustomPlot* teamPlot = teamsData[i]->getCustomPlotAuton();
-            teamPlot->clearGraphs();
+            QCustomPlot* autonTeamPlot = teamsData[i]->getCustomPlotAuton();
+            QCustomPlot* teleopTeamPlot = teamsData[i]->getCustomPlotTeleop();
+            autonTeamPlot->clearGraphs();
+            teleopTeamPlot->clearGraphs();
 
             QStringList matchData = teamsData[i]->getMatchData();
             int matchSize = matchData.size();
 
-            for (int j = 0; j < checkBoxes.size(); j++)
+            for (int j = 0; j < autonCheckBoxes.size(); j++)
             {
-                if (checkBoxes[j]->isChecked()) {
-                    qDebug() << "CHECKED";
-                    QString plotOption = checkBoxes[j]->objectName();
+                if (autonCheckBoxes[j]->isChecked()) {
+                    QString plotOption = autonCheckBoxes[j]->objectName();
                     QStringList plotOptionArgs = plotOption.split("|");
                     QStringList plotSourceArgs = plotOptionArgs[1].split(",");
 
@@ -613,18 +632,47 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
                         y[l] = yVal;
                     }
                     
-                    teamPlot->addGraph();
-                    teamPlot->graph(graphNum)->setData(x, y);
+                    autonTeamPlot->addGraph();
+                    autonTeamPlot->graph(0)->setData(x, y);
                     // give the axes some labels:
-                    teamPlot->xAxis->setLabel("Matches");
-                    teamPlot->yAxis->setLabel(plotOptionArgs[0]);
+                    autonTeamPlot->xAxis->setLabel("Matches");
+                    autonTeamPlot->yAxis->setLabel(plotOptionArgs[0]);
                     // set axes ranges, so we see all data:
-                    teamPlot->xAxis->setRange(0, matchSize);
-                    teamPlot->yAxis->setRange(plotOptionArgs[2].toInt(), plotOptionArgs[3].toInt());
-                    teamPlot->replot();
-                    teamPlot->show();
+                    autonTeamPlot->xAxis->setRange(0, matchSize);
+                    autonTeamPlot->yAxis->setRange(plotOptionArgs[2].toInt(), plotOptionArgs[3].toInt());
+                    autonTeamPlot->replot();
+                    autonTeamPlot->show();
+                }
+            }
 
-                    graphNum += 1;
+            for (int j = 0; j < teleopCheckBoxes.size(); j++)
+            {
+                if (teleopCheckBoxes[j]->isChecked()) {
+                    QString plotOption = teleopCheckBoxes[j]->objectName();
+                    QStringList plotOptionArgs = plotOption.split("|");
+                    QStringList plotSourceArgs = plotOptionArgs[1].split(",");
+
+                    QVector<double> x(matchSize), y(matchSize);
+                    for (int l = 0; l < matchSize; l++)
+                    {
+                        x[l] = l; //Util::findDouble(matchData[l], "mn");
+                        double yVal = 0.0;
+                        for (int k = 0; k < plotSourceArgs.size(); k++) {
+                            yVal += Util::findDouble(matchData[l], plotSourceArgs[k]);
+                        }
+                        y[l] = yVal;
+                    }
+                    
+                    teleopTeamPlot->addGraph();
+                    teleopTeamPlot->graph(0)->setData(x, y);
+                    // give the axes some labels:
+                    teleopTeamPlot->xAxis->setLabel("Matches");
+                    teleopTeamPlot->yAxis->setLabel(plotOptionArgs[0]);
+                    // set axes ranges, so we see all data:
+                    teleopTeamPlot->xAxis->setRange(0, matchSize);
+                    teleopTeamPlot->yAxis->setRange(plotOptionArgs[2].toInt(), plotOptionArgs[3].toInt());
+                    teleopTeamPlot->replot();
+                    teleopTeamPlot->show();
                 }
             }
         }
@@ -768,6 +816,11 @@ void MainWindow::updateTeamList()
         teleOpStatsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
         teleOpStatsLabel->setAlignment(Qt::AlignCenter);
         gridLayout->addWidget(teleOpStatsLabel, 2, 2, 1, 2);
+
+        QCustomPlot *customPlotTeleop = new QCustomPlot(this);
+        teamsData[i]->setCustomPlotTeleop(customPlotTeleop);
+        customPlotTeleop->hide();
+        gridLayout->addWidget(customPlotTeleop, 3, 3, 1, 1);
 
         QLabel *teleOpStats = new QLabel();
         teleOpStats->setStyleSheet("font-size: 16px; font-weight: 500;");

@@ -132,6 +132,18 @@ public:
         customPlotAuton = plot;
     }
 
+    QCustomPlot* getCustomPlotTeleop() {
+        return customPlotTeleop;
+    }
+
+    void setCustomPlotTeleop(QCustomPlot *plot) {
+        if (customPlotTeleop != nullptr) {
+            customPlotTeleop->deleteLater();
+        }
+        
+        customPlotTeleop = plot;
+    }
+
 private:
     QStringList originalMatchData;
     QStringList matchesData;
@@ -141,6 +153,7 @@ private:
     float averageTotal = 0.0;
 
     QCustomPlot *customPlotAuton = nullptr;
+    QCustomPlot *customPlotTeleop = nullptr;
 
 };
 
