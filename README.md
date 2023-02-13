@@ -29,3 +29,6 @@ Allows the user to visualize their data in graphs with customizable y-axis data 
 ## Filter Data
 * Filter out the Worst # of Matches the Teams (incase of breakdowns)
 * Filter out matches recorded before # (only recent data)
+
+## License Info:
+QCustomPlot (a dependency of this project) has a GPL-3.0 license.
