@@ -10,8 +10,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(QT_USE_QTMAIN TRUE)
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
-      "Default build type: RelWithDebInfo" FORCE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING
+      "Default build type: Release" FORCE)
 endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
