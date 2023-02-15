@@ -125,11 +125,9 @@ public:
     }
 
     void setCustomPlotAuton(QCustomPlot *plot) {
-        if (customPlotAuton != nullptr) {
-            customPlotAuton->deleteLater();
+        if (customPlotAuton != nullptr && customPlotAuton != NULL) {} else {
+            customPlotAuton = plot;
         }
-        
-        customPlotAuton = plot;
     }
 
     QCustomPlot* getCustomPlotTeleop() {
@@ -137,11 +135,9 @@ public:
     }
 
     void setCustomPlotTeleop(QCustomPlot *plot) {
-        if (customPlotTeleop != nullptr) {
-            customPlotTeleop->deleteLater();
+        if (customPlotTeleop != nullptr && customPlotTeleop != NULL) {} else {
+            customPlotTeleop = plot;
         }
-        
-        customPlotTeleop = plot;
     }
 
 private:

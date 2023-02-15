@@ -30,6 +30,9 @@ private:
     void updateTeamData();
     void saveData();
 
+    void clickedAuton();
+    void clickedTeleop();
+
     QString oldSort = "";
 
     QScrollArea *dataScroll;
@@ -47,5 +50,8 @@ private:
     QStringList sortOptions = QStringList();
     QStringList autonPlotOptions = QStringList();
     QStringList teleopPlotOptions = QStringList();
+
+    QList<QCheckBox*> teleopCheckBoxes;
+    QList<QCheckBox*> autonCheckBoxes;
 
 };

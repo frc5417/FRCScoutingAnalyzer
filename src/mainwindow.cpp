@@ -525,7 +525,7 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
 
     int maxRow = 2;
 
-    QList<QCheckBox*> autonCheckBoxes = QList<QCheckBox*>();
+    autonCheckBoxes = QList<QCheckBox*>();
 
     for (int i = 0; i < autonPlotOptions.size(); i++) {
         QStringList args = autonPlotOptions[i].split("|");
@@ -536,15 +536,7 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
         autonCheckBoxes.append(checkBox);
         graphWdgLayout->addWidget(checkBox, 2 + i, 0, 1, 1);
 
-        connect(checkBox, &QAbstractButton::clicked, [=]() {
-            QCheckBox* checkBox2 = qobject_cast<QCheckBox*>(sender());
-            qDebug() << checkBox2;
-            if (!checkBox2->isChecked()) return;
-            for(int i = 0; i < autonCheckBoxes.length(); i++) {
-                autonCheckBoxes[i]->setChecked(false);
-            }
-            checkBox2->setChecked(true);
-        });
+        connect(checkBox, &QAbstractButton::clicked, this, &MainWindow::clickedAuton);
 
         QLabel *autonPlotLabel = new QLabel(args[0], graphWdg);
         autonPlotLabel->setStyleSheet("font-weight: 500; font-size: 16px; color: white;");
@@ -554,7 +546,7 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
         if (2 + i > maxRow) maxRow = 2 + i;
     }
 
-    QList<QCheckBox*> teleopCheckBoxes = QList<QCheckBox*>();
+    teleopCheckBoxes = QList<QCheckBox*>();
 
     QLabel *teleopGraphLabel = new QLabel(graphWdg);
     teleopGraphLabel->setText("TeleOP Graphs:");
@@ -571,14 +563,7 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
         teleopCheckBoxes.append(checkBox);
         graphWdgLayout->addWidget(checkBox, 2 + i, 2, 1, 1);
 
-        connect(checkBox, &QAbstractButton::clicked, [=]() {
-            QCheckBox* checkBox2 = qobject_cast<QCheckBox*>(sender());
-            if (!checkBox2->isChecked()) return;
-            for(int i = 0; i < teleopCheckBoxes.length(); i++) {
-                teleopCheckBoxes[i]->setChecked(false);
-            }
-            checkBox2->setChecked(true);
-        });
+        connect(checkBox, &QAbstractButton::clicked, this, &MainWindow::clickedTeleop);
 
         QLabel *autonPlotLabel = new QLabel(args[0], graphWdg);
         autonPlotLabel->setStyleSheet("font-weight: 500; font-size: 16px; color: white;");
@@ -931,4 +916,34 @@ void MainWindow::handleSortSelection(QString sortBy)
     oldSort = sortBy;
 
     updateTeamList();
+}
+
+void MainWindow::clickedAuton() {
+    if (sender() == nullptr || sender() == NULL) {
+        qDebug() << "sender() is null!";
+        return;
+    }
+
+    auto checkBox = qobject_cast<QCheckBox *>(sender());
+    if (checkBox->isChecked()) {
+        for(int i = 0; i < autonCheckBoxes.length(); i++) {
+            autonCheckBoxes[i]->setChecked(false);
+        }
+        checkBox->setChecked(true);
+    }
+}
+
+void MainWindow::clickedTeleop() {
+    if (sender() == nullptr || sender() == NULL) {
+        qDebug() << "sender() is null!";
+        return;
+    }
+
+    auto checkBox = qobject_cast<QCheckBox *>(sender());
+    if (checkBox->isChecked()) {
+        for(int i = 0; i < teleopCheckBoxes.length(); i++) {
+            teleopCheckBoxes[i]->setChecked(false);
+        }
+        checkBox->setChecked(true);
+    }
 }
