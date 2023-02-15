@@ -1,0 +1,6 @@
+# FORMAT = name|category1...category2|<asc/desc> Example: TeleOP Cube Total|tcb,tcm,tct|desc
+# automatically made: Team Number, Total Points, Auton Points, TeleOP Points
+
+TeleOP Cube Total|tcb,tcm,tct|desc
+TeleOP Cone Total|tnb,tnm,tnt|desc
+Cycle Time|cyc|asc
