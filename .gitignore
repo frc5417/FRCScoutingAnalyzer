@@ -17,3 +17,5 @@ build/.q*
 build/AppDir/
 build/release/
 *.pro.user
+build/ScoutingAnalyzerWindows/*
+build/ScoutingAnalyzerLinux/*
