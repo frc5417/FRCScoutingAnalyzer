@@ -12,6 +12,8 @@ _deps
 build/ScoutingAnalyzer_autogen*
 build/*.o
 build/*moc*
-build/Makefile
+build/Makefile*
 build/.q*
 build/AppDir/
+build/release/
+*.pro.user
