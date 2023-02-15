@@ -29,7 +29,8 @@ Currently the system requires you to have a physical QR Code Scanner, but in the
 2. Run Once: `sudo apt install qtbase5-dev`
 3. `cd` into the `build/` directory
 4. Once: Download [linuxdeploy/linuxdeploy](https://github.com/linuxdeploy/linuxdeploy/) and [linuxdeploy/linuxdeploy-plugin-qt](https://github.com/linuxdeploy/linuxdeploy-plugin-qt/) from their respective repositories on Github.
-5. Run `./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage`
+5. Run `qmake ..`, `make -j$(nproc)`, and `make install INSTALL_ROOT=AppDir`
+6. Run `./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage`
 ### Windows:
 2. Once: Download QT Creator for Qt5
 3. Open in QT Creator (clicking on the .pro file)
