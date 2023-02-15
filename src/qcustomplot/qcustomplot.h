@@ -1555,7 +1555,8 @@ public:
   
   QCPLineEnding();
   QCPLineEnding(EndingStyle style, double width=8, double length=10, bool inverted=false);
-  
+  ~QCPLineEnding(){};
+
   // getters:
   EndingStyle style() const { return mStyle; }
   double width() const { return mWidth; }

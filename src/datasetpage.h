@@ -7,6 +7,7 @@ class DatasetPage : public QWidget
 
 public:
     DatasetPage();
+    ~DatasetPage(){};
 
 private:
     QStringList datasets;

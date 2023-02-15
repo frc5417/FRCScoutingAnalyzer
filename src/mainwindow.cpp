@@ -80,7 +80,7 @@ MainWindow::MainWindow(QString datasetPath)
         datasetFile.close();
     };
 
-    QFile databreakdownFile("../assets/databreakdown");
+    QFile databreakdownFile("./databreakdown");
     if (databreakdownFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QTextStream in(&databreakdownFile);
@@ -112,7 +112,7 @@ MainWindow::MainWindow(QString datasetPath)
         databreakdownFile.close();
     };
 
-    QFile plotOptionsFile("../assets/plotoptions");
+    QFile plotOptionsFile("./plotoptions");
     if (plotOptionsFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QTextStream in(&plotOptionsFile);
@@ -151,7 +151,7 @@ MainWindow::MainWindow(QString datasetPath)
     QLabel *logoLabel = new QLabel(this);
     logoLabel->setStyleSheet("background-color: rbga(0, 0, 0, 0); padding: 10px;");
     logoLabel->setAlignment(Qt::AlignCenter);
-    logoLabel->setPixmap(QPixmap::fromImage(QImage("../assets/teamLogo.png")));
+    logoLabel->setPixmap(QPixmap::fromImage(QImage("./teamLogo.png")));
     logoLabel->setScaledContents(true);
     logoLabel->setMaximumSize(150, 150);
     layout->addWidget(logoLabel, 0, 0, 1, 1);
@@ -218,7 +218,7 @@ MainWindow::MainWindow(QString datasetPath)
     sortByDropdown->addItem("Auton Points");
     sortByDropdown->addItem("TeleOP Points");
 
-    QFile sortOptionsFile("../assets/sortoptions");
+    QFile sortOptionsFile("./sortoptions");
     if (sortOptionsFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QTextStream in(&sortOptionsFile);
@@ -297,7 +297,7 @@ MainWindow::MainWindow(QString datasetPath)
 
     QLabel *searchLabel = new QLabel(this);
     searchLabel->setAlignment(Qt::AlignVCenter);
-    searchLabel->setPixmap(QPixmap::fromImage(QImage("../assets/searchIcon.png")));
+    searchLabel->setPixmap(QPixmap::fromImage(QImage("./searchIcon.png")));
     searchLabel->setScaledContents(true);
     searchLabel->setMaximumSize(30, 30);
     searchLabel->setStyleSheet("font-size: 24px; font-weight: 700;");
@@ -681,16 +681,16 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
 
 void MainWindow::saveData()
 {
-    QFile datasetFile = QFile(datasetFilePath);
-    if ( datasetFile.open(QIODevice::WriteOnly | QIODevice::Text) )
+    QFile *datasetFile = new QFile(datasetFilePath);
+    if ( datasetFile->open(QIODevice::WriteOnly | QIODevice::Text) )
     {
-        QTextStream stream( &datasetFile );
+        QTextStream stream( datasetFile );
         for (int i = 0; i < stringData.size(); i++)
         {
             if(stringData[i].isEmpty()) continue;
-            stream << stringData[i] << Qt::endl;
+            stream << stringData[i] << "\n";
         }
-        datasetFile.close();
+        datasetFile->close();
     }
 }
 

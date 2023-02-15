@@ -37,7 +37,7 @@ DatasetPage::DatasetPage()
     datasetDropdown->setContentsMargins(0, 20, 0, 0);
     datasetDropdown->addItem("--Select Dataset--");
 
-    QFile file("../assets/datasets.txt");
+    QFile file("./datasets.txt");
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QTextStream in(&file);
@@ -82,12 +82,12 @@ void DatasetPage::handleSelection(QString path)
         QDir directory = QDir(datasetFolder);
         QStringList files = directory.entryList(QDir::Files);
         if (!files.contains("dataset.data")) {
-            QFile datasetFile = QFile(directory.filePath("dataset.data"));
-            if ( datasetFile.open(QIODevice::WriteOnly | QIODevice::Text) )
+            QFile *datasetFile = new QFile(directory.filePath("dataset.data"));
+            if ( datasetFile->open(QIODevice::WriteOnly | QIODevice::Text) )
             {
-                QTextStream stream( &datasetFile );
-                stream << "" << Qt::endl;
-                datasetFile.close();
+                QTextStream stream( datasetFile );
+                stream << "" << "\n";
+                datasetFile->close();
             }
         }
 
@@ -95,15 +95,15 @@ void DatasetPage::handleSelection(QString path)
 
         datasets.push_back(path);
 
-        QFile datasetsFile = QFile("../assets/datasets.txt");
-        if ( datasetsFile.open(QIODevice::WriteOnly | QIODevice::Text) )
+        QFile *datasetsFile = new QFile("./datasets.txt");
+        if ( datasetsFile->open(QIODevice::WriteOnly | QIODevice::Text) )
         {
-            QTextStream stream( &datasetsFile );
+            QTextStream stream( datasetsFile );
             for (int i = 0; i < datasets.size(); i++)
             {
-                stream << datasets[i] << Qt::endl;
+                stream << datasets[i] << "\n";
             }
-            datasetsFile.close();
+            datasetsFile->close();
         }
     }
 

@@ -15,6 +15,7 @@ class MainWindow : public QWidget
 
 public:
     MainWindow(QString datasetPath);
+    ~MainWindow(){};
 
 signals:
     void requestInputDataWidget();
