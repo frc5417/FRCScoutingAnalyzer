@@ -16,7 +16,8 @@ Currently the system requires you to have a physical QR Code Scanner, but in the
 1. Clone the repository
 ### Linux (Debian):
 2. Run Once: `sudo apt install qtbase5-dev`
-3. Run: `./ScoutingAnalyzer` in the `build/` folder.
+3. Run Once: `cmake ..` inside the `build/` folder.
+3. Run: `make && ./ScoutingAnalyzer` in the `build/` folder.
 ### Windows:
 2. Once: Download QT Creator
 3. Open in QT Creator (clicking on the .pro file)
