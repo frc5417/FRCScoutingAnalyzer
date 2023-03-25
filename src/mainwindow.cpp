@@ -41,6 +41,11 @@ static bool autonPointsDesc(TeamData* v1, TeamData* v2)
     return v1->getAutonAverage() > v2->getAutonAverage();
 }
 
+static bool matchNumAsc(QString match1, QString match2)
+{
+    return Util::findDouble(match1, "mn") < Util::findDouble(match2, "mn");
+}
+
 MainWindow::MainWindow(QString datasetPath)
     : QWidget()
 {
@@ -202,6 +207,8 @@ MainWindow::MainWindow(QString datasetPath)
     });
 
     QWidget *sortContainer = new QWidget(this);
+    sortContainer->setFixedHeight(100);
+
     QVBoxLayout *sortContainerLayout = new QVBoxLayout(sortContainer);
 
     QLabel *sortByLabel = new QLabel("Sort By:", this);
@@ -335,6 +342,37 @@ MainWindow::MainWindow(QString datasetPath)
     
     updateTeamList();
 
+    // Code for the match breakdown popup:
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QRect  screenGeometry = screen->geometry();
+    int height = screenGeometry.height();
+    int width = screenGeometry.width();
+
+    matchBreakdownBlur = new QWidgetWithClick(this);
+    matchBreakdownBlur->setStyleSheet("background-color: rgba(0, 0, 0, 0.5);");
+    matchBreakdownBlur->setGeometry(0, 0, width, height);
+    matchBreakdownBlur->hide();
+
+    connect(matchBreakdownBlur, &QWidgetWithClick::clicked, [=]() {
+        matchBreakdownBlur->hide();
+        matchBreakdownScroll->hide();
+    });
+
+    matchBreakdownScroll = new QScrollArea(this);
+    matchBreakdownScroll->setStyleSheet("background-color: #3D3D3D; border-radius: 10px;");
+    matchBreakdownScroll->verticalScrollBar()->setStyleSheet("QScrollBar { border: none; background-color: #ffffff; color: black; width: 16px } QScrollBar::handle { background-color: #2d2d2d; }");
+    matchBreakdownScroll->setWidgetResizable( true );
+    matchBreakdownScroll->hide();
+
+    QWidget *matchBreakdownWdg = new QWidget(this);
+    matchBreakdownWdg->setStyleSheet("background-color: rgba(0, 0, 0, 0);");
+    matchBreakdownScroll->setWidget(matchBreakdownWdg);
+
+    matchBreakdownScrollLayout = new QVBoxLayout(this);
+    matchBreakdownScrollLayout->setMargin(20);
+    matchBreakdownScrollLayout->setSpacing(20);
+    matchBreakdownWdg->setLayout(matchBreakdownScrollLayout);
+
     layout->setMargin(0);
     this->setLayout(layout);
 
@@ -342,6 +380,133 @@ MainWindow::MainWindow(QString datasetPath)
 
     this->showFullScreen();
 };
+
+void MainWindow::showTeamMatches(TeamData *teamData)
+{
+    QLayoutItem* item;
+    while ( ( item = matchBreakdownScrollLayout->takeAt( 0 ) ) != NULL )
+    {
+        delete item->widget();
+        delete item;
+    }
+    
+    QStringList data = teamData->getMatchData();
+    std::sort(data.begin(), data.end(), matchNumAsc);
+
+    for (QString match : data) {
+        QWidget *main = new QWidget();
+        main->setStyleSheet("background-color: #2c2c2c; border-radius: 10px;");
+        main->setMinimumHeight(400);
+
+        QGridLayout *gridLayout = new QGridLayout(main);
+
+        QLabel *matchLabel = new QLabel("Match " + Util::findString(match, "mn"));
+        matchLabel->setStyleSheet("font-size: 20px; font-weight: 700;");
+        matchLabel->setAlignment(Qt::AlignCenter);
+        gridLayout->addWidget(matchLabel, 0, 0, 1, 4);
+        
+        QLabel *totalPointsLabel = new QLabel("Total Points");
+        totalPointsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
+        totalPointsLabel->setAlignment(Qt::AlignCenter);
+        gridLayout->addWidget(totalPointsLabel, 1, 0, 1, 4);
+
+        QLabel *autoStatsLabel = new QLabel("Autonomous Stats");
+        autoStatsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
+        autoStatsLabel->setAlignment(Qt::AlignCenter);
+        gridLayout->addWidget(autoStatsLabel, 2, 0, 1, 2);
+
+        QLabel *autoStats = new QLabel();
+        autoStats->setStyleSheet("font-size: 16px; font-weight: 500;");
+        autoStats->setAlignment(Qt::AlignLeft);
+
+        QString autoStatsStr = "";
+        float totalAuton = 0.0;
+
+        for (int i = 0; i < autonDatasetBreakdown.size(); i++)
+        {
+            float value = 0.0;
+            QStringList args = autonDatasetBreakdown.at(i).split("|");
+            QString dataType = args[2];
+            float pointsWorth = args.length() > 3 ? args[3].toFloat() : 0.0;
+            if (dataType == "number" || dataType == "bool")
+            {
+                value = Util::findDouble(match, args[0]);
+             
+                totalAuton += value * pointsWorth;
+
+                if (dataType == "number")
+                    autoStatsStr += args[1] + ": " + QString::number(value, 10, 2) + "\n";
+                else
+                    autoStatsStr += args[1] + ": " + QString::number(value * 100, 10, 1) + "%\n";
+            }
+            if (dataType == "string")
+            {
+                autoStatsStr += args[1] + ":\n";
+                autoStatsStr += Util::findString(match, args[0]).replace("|||", "    \n");
+            }
+        }
+
+        // autoStats->setMaximumWidth(main->width() / 4);
+        autoStats->setText(autoStatsStr);
+        autoStats->setWordWrap(true);
+        autoStats->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+
+        gridLayout->addWidget(autoStats, 3, 0, 1, 2);
+
+        autoStatsLabel->setText("Autonomous Stats - " + QString::number(totalAuton, 10, 1) + " Average Points");
+
+        QLabel *teleOpStatsLabel = new QLabel("TeleOP Stats");
+        teleOpStatsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
+        teleOpStatsLabel->setAlignment(Qt::AlignCenter);
+        gridLayout->addWidget(teleOpStatsLabel, 2, 2, 1, 2);
+
+        QLabel *teleOpStats = new QLabel();
+        teleOpStats->setStyleSheet("font-size: 16px; font-weight: 500;");
+        teleOpStats->setAlignment(Qt::AlignLeft);
+
+        QString teleopStatsStr = "";
+        float totalTeleOP = 0.0;
+
+        for (int i = 0; i < teleopDatasetBreakdown.size(); i++)
+        {            
+            float value = 0.0;
+            QStringList args = teleopDatasetBreakdown.at(i).split("|");
+            QString dataType = args[2];
+            float pointsWorth = args.length() > 3 ? args[3].toFloat() : 0.0;
+            if (dataType == "number" || dataType == "bool")
+            {
+                value += Util::findDouble(match, args[0]);
+             
+                totalTeleOP += value * pointsWorth;
+
+                if (dataType == "number")
+                    teleopStatsStr += args[1] + ": " + QString::number(value, 10, 2) + "\n";
+                else
+                    teleopStatsStr += args[1] + ": " + QString::number(value * 100, 10, 1) + "%\n";
+            }
+            if (dataType == "string")
+            {
+                teleopStatsStr += args[1] + ":\n";
+                teleopStatsStr += Util::findString(match, args[0]).replace("|||", "    \n");
+            }
+        }
+        
+        // teleOpStats->setMaximumWidth(main->width() / 4);
+        teleOpStats->setText(teleopStatsStr);
+        teleOpStats->setWordWrap(true);
+        teleOpStats->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+        gridLayout->addWidget(teleOpStats, 3, 2, 1, 2);
+
+        teleOpStatsLabel->setText("TeleOP Stats - " + QString::number(totalTeleOP, 10, 1) + " Average Points");
+        totalPointsLabel->setText("Total Points - " + QString::number(totalTeleOP + totalAuton, 10, 1));
+
+        matchBreakdownScrollLayout->addWidget(main);
+    }
+
+    matchBreakdownScroll->setGeometry(width() / 6, height() / 6, width() / 6 * 4, height() / 6 * 4);
+    matchBreakdownScroll->show();
+    matchBreakdownBlur->show();
+}
 
 void MainWindow::makeInputDataWdg(QWidget *inputDataWdg)
 {
@@ -588,7 +753,6 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
     connect(applyGraph, &QAbstractButton::clicked, [=]() {
         graphWdg->hide();
 
-        // assume its auton:
         for (int i = 0; i < teamsData.count(); i++)
         {
             QCustomPlot* autonTeamPlot = teamsData[i]->getCustomPlotAuton();
@@ -704,6 +868,7 @@ void MainWindow::updateTeamData()
                 TeamData *teamData = new TeamData(teamNum);
                 teamData->addToMatchData(line);
                 teamsData.push_back(teamData);
+                teamsHaveData.push_back(teamNum);
             }
         }
     }
@@ -726,9 +891,11 @@ void MainWindow::updateTeamList()
     {
         if (teamsData[i]->getMatchData().count() == 0) continue;
 
-        QWidget *main = new QWidget();
+        QWidgetWithClick *main = new QWidgetWithClick();
         main->setStyleSheet("background-color: #3c3c3c; border-radius: 10px;");
+        main->setObjectName(teamsData[i]->teamNumber);
         main->setMinimumHeight(400);
+        connect(main, &QWidgetWithClick::clicked, this, &MainWindow::clickedTeam);
 
         QGridLayout *gridLayout = new QGridLayout(main);
 
@@ -736,7 +903,18 @@ void MainWindow::updateTeamList()
         teamLabel->setStyleSheet("font-size: 20px; font-weight: 700;");
         teamLabel->setAlignment(Qt::AlignCenter);
         gridLayout->addWidget(teamLabel, 0, 0, 1, 4);
-        
+
+        double sortValue = teamsData[i]->getCustomSortValue();
+        QLabel *sortValueLabel = nullptr;
+        if (sortValue >= 0) {
+            sortValueLabel = new QLabel("Sort Value: " + QString::number(sortValue, 'f', 2) , main);
+            sortValueLabel->setStyleSheet("font-size: 16px; font-weight: 500;");
+            sortValueLabel->setAlignment(Qt::AlignLeft);
+            sortValueLabel->setMinimumWidth(150);
+            sortValueLabel->move(20, 20);
+            sortValueLabel->show();
+        }
+
         QLabel *totalPointsLabel = new QLabel("Total Points ");
         totalPointsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
         totalPointsLabel->setAlignment(Qt::AlignCenter);
@@ -787,11 +965,15 @@ void MainWindow::updateTeamList()
                 {
                     QString value = Util::findString(matchData[l], args[0]);
                     if (!value.isEmpty())
-                        autoStatsStr += Util::findString(matchData[l], "mn") + ": " + value + "\n";
+                        autoStatsStr += Util::findString(matchData[l], "mn") + ": " + value.replace("|||", "    \n") + "\n";
                 }
             }
         }
+
+        // autoStats->setMaximumWidth(main->width() / 4);
         autoStats->setText(autoStatsStr);
+        autoStats->setWordWrap(true);
+        autoStats->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
 
         gridLayout->addWidget(autoStats, 3, 0, 1, 1);
 
@@ -813,7 +995,7 @@ void MainWindow::updateTeamList()
 
         QString teleopStatsStr = "";
         float totalTeleOP = 0.0;
-
+        
         for (int i = 0; i < teleopDatasetBreakdown.size(); i++)
         {            
             float total = 0.0;
@@ -841,18 +1023,29 @@ void MainWindow::updateTeamList()
                 {
                     QString value = Util::findString(matchData[l], args[0]);
                     if (!value.isEmpty())
-                        teleopStatsStr += Util::findString(matchData[l], "mn") + ": " + value + "\n";
+                        teleopStatsStr += Util::findString(matchData[l], "mn") + ": " + value.replace("|||", "    \n") + "\n";
                 }
             }
         }
         
+        // teleOpStats->setMaximumWidth(main->width() / 4);
         teleOpStats->setText(teleopStatsStr);
+        teleOpStats->setWordWrap(true);
+        teleOpStats->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
         gridLayout->addWidget(teleOpStats, 3, 2, 1, 1);
 
         teleOpStatsLabel->setText("TeleOP Stats - " + QString::number(totalTeleOP, 10, 1) + " Average Points");
         totalPointsLabel->setText("Total Average Points - " + QString::number(totalTeleOP + totalAuton, 10, 1) + " | Matches Recorded: " + QString::number(matchData.size()));
 
+        for(int c = 0; c < gridLayout->columnCount(); c++) gridLayout->setColumnStretch(c,1);
+        connect(main, &QWidgetWithClick::resized, [=]() {
+            teleOpStats->setFixedWidth(main->width() / 4);
+            autoStats->setFixedWidth(main->width() / 4);
+        });
+
         teamsData[i]->setAverages(totalAuton, totalTeleOP);
+
+        if (sortValueLabel != nullptr) sortValueLabel->raise();
 
         dataScrollLayout->addWidget(main);
 
@@ -868,6 +1061,15 @@ void MainWindow::handleSortSelection(QString sortBy)
         else sortBy = oldSort;
     }
 
+    qDebug() << "Clearing Old Values Started for Sort";
+
+    for (int i = 0; i < teamsData.count(); i++)
+    {
+        teamsData[i]->setCustomSortValue(-1.0);
+    }
+
+    qDebug() << "Sorting Started:" << sortBy;
+
     if (sortBy == "Team Number") {
         std::sort(teamsData.begin(), teamsData.end(), teamNumLessThan);
     } else if (sortBy == "Total Points") {
@@ -880,25 +1082,40 @@ void MainWindow::handleSortSelection(QString sortBy)
         for (int i = 0; i < sortOptions.size(); i++)
         {
             if (sortOptions[i].split("|")[0] == sortBy) {
+		QStringList dataset = teleopDatasetBreakdown;
+		dataset += autonDatasetBreakdown;
                 QStringList keys = sortOptions[i].split("|").length() > 1 ? sortOptions[i].split("|")[1].split(",") : QStringList() << "tn";
-                std::sort(teamsData.begin(), teamsData.end(), [=](TeamData* v1, TeamData* v2) {
+                std::sort(teamsData.begin(), teamsData.end(), [=](TeamData* v1, TeamData* v2) {                    
                     float total1 = 0.0;
                     float total2 = 0.0;
                     QStringList matchData1 = v1->getMatchData();
                     QStringList matchData2 = v2->getMatchData();
                     for (int i = 0; i < keys.size(); i++)
                     {
+		    double pointValue = Util::findPointValue(dataset, keys[i].mid(2));
                         for (int l = 0; l < matchData1.size(); l++)
                         {
-                            total1 += Util::findDouble(matchData1[l], keys[i]);
+                            if (keys[i].startsWith("p-")) {
+				total1 += Util::findDouble(matchData1[l], keys[i].mid(2)) * pointValue;
+			    } else {	       
+			    	total1 += Util::findDouble(matchData1[l], keys[i]);
+			    }
                         }
                         for (int l = 0; l < matchData2.size(); l++)
                         {
-                            total2 += Util::findDouble(matchData2[l], keys[i]);
+			    if (keys[i].startsWith("p-")) {
+                                total2 += Util::findDouble(matchData2[l], keys[i].mid(2)) * pointValue;
+			    } else {
+				total2 += Util::findDouble(matchData2[l], keys[i]);
+			    } 
                         }
                     }
                     total1 = total1 / matchData1.size();
                     total2 = total2 / matchData2.size();
+
+                    v1->setCustomSortValue(total1);
+                    v2->setCustomSortValue(total2);
+
                     if (sortOptions[i].split("|").length() > 2) {
                         if (sortOptions[i].split("|")[2] == "asc") {
                             return total1 < total2;
@@ -912,6 +1129,8 @@ void MainWindow::handleSortSelection(QString sortBy)
             }
         }
     }
+
+    qDebug() << "Sorting finished!";
 
     oldSort = sortBy;
 
@@ -946,4 +1165,23 @@ void MainWindow::clickedTeleop() {
         }
         checkBox->setChecked(true);
     }
+}
+
+void MainWindow::clickedTeam() {
+    if (sender() == nullptr || sender() == NULL) {
+        qDebug() << "sender() is null!";
+        return;
+    }
+
+    QWidgetWithClick *teamMain = qobject_cast<QWidgetWithClick *>(sender());
+    QString teamNumber = teamMain->objectName();
+
+    for (TeamData *tmData : teamsData) {
+        if (tmData->teamNumber == teamNumber) {
+            showTeamMatches(tmData);
+            break;
+        }
+    }
+
+    qDebug() << "TeamNumber Clicked: " << teamNumber;
 }

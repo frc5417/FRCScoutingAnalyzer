@@ -20,6 +20,15 @@ public:
         originalMatchData = QStringList();
     }
 
+    ~TeamData() {
+        if (customPlotTeleop != nullptr && customPlotTeleop != NULL) {
+            customPlotTeleop->deleteLater();
+        }
+        if (customPlotAuton != nullptr && customPlotAuton != NULL) {
+            customPlotAuton->deleteLater();
+        }
+    }
+
     static bool sortByTotalPoints(QString match1, QString match2, QStringList teleopDatasetBreakdown, QStringList autonDatasetBreakdown)
     {
         float match1Total = 0.0;
@@ -140,6 +149,14 @@ public:
         }
     }
 
+    void setCustomSortValue(double value) {
+        customSortValue = value;
+    }
+
+    double getCustomSortValue() {
+        return customSortValue;
+    }
+
 private:
     QStringList originalMatchData;
     QStringList matchesData;
@@ -151,6 +168,7 @@ private:
     QCustomPlot *customPlotAuton = nullptr;
     QCustomPlot *customPlotTeleop = nullptr;
 
+    double customSortValue = -1.0;
 };
 
 #endif

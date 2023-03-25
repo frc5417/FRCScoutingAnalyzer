@@ -17,3 +17,4 @@ build/AppDir/
 build/release/
 *_autogen/
 *.pro.user
+build/datasets.txt
