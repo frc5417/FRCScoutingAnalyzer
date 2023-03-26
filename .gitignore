@@ -15,6 +15,8 @@ build/Makefile*
 build/.q*
 build/AppDir/
 build/release/
+build/ScoutingAnalyzerWindows/*
+build/ScoutingAnalyzerLinux/*
 *_autogen/
 *.pro.user
 build/datasets.txt
