@@ -1,1 +1,2 @@
 /home/bkapla01/FRC2023/ScoutingTesting/New
+/home/bkapla01/FRC2023/ScoutingTesting/FIT-Dallas-Week1
