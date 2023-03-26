@@ -427,9 +427,9 @@ void MainWindow::showTeamMatches(TeamData *teamData)
             float value = 0.0;
             QStringList args = autonDatasetBreakdown.at(i).split("|");
             QString dataType = args[2];
-            float pointsWorth = args.length() > 3 ? args[3].toFloat() : 0.0;
             if (dataType == "number" || dataType == "bool")
             {
+                float pointsWorth = args.length() > 3 ? args[3].toFloat() : 0.0;
                 value = Util::findDouble(match, args[0]);
              
                 totalAuton += value * pointsWorth;
@@ -439,10 +439,25 @@ void MainWindow::showTeamMatches(TeamData *teamData)
                 else
                     autoStatsStr += args[1] + ": " + QString::number(value * 100, 10, 1) + "%\n";
             }
-            if (dataType == "string")
+            else if (dataType == "string")
             {
                 autoStatsStr += args[1] + ":\n";
                 autoStatsStr += Util::findString(match, args[0]).replace("|||", "    \n");
+            }
+            else if (dataType.startsWith("dropdown"))
+            {
+                QStringList pointsWorth = QStringList();
+                if (args.length() > 3) pointsWorth = args[3].split(",");
+
+                QStringList names = dataType.mid(9).split(",");
+                int index = (int) Util::findDouble(match, args[0]);
+                if (index >= 0 && names.length() > index) {
+                    autoStatsStr += args[1] + ": " + names[index] + "\n";
+                }
+
+                if (index >= 0 && pointsWorth.length() > index) {
+                    totalAuton += pointsWorth[index].toFloat();
+                }
             }
         }
 
@@ -484,10 +499,25 @@ void MainWindow::showTeamMatches(TeamData *teamData)
                 else
                     teleopStatsStr += args[1] + ": " + QString::number(value * 100, 10, 1) + "%\n";
             }
-            if (dataType == "string")
+            else if (dataType == "string")
             {
                 teleopStatsStr += args[1] + ":\n";
                 teleopStatsStr += Util::findString(match, args[0]).replace("|||", "    \n");
+            }
+            else if (dataType.startsWith("dropdown"))
+            {
+                QStringList pointsWorth = QStringList();
+                if (args.length() > 3) pointsWorth = args[3].split(",");
+
+                QStringList names = dataType.mid(9).split(",");
+                int index = (int) Util::findDouble(match, args[0]);
+                if (index >= 0 && names.length() > index) {
+                    teleopStatsStr += args[1] + ": " + names[index] + "\n";
+                }
+
+                if (index >= 0 && pointsWorth.length() > index) {
+                    totalTeleOP += pointsWorth[index].toFloat();
+                }
             }
         }
         
@@ -958,7 +988,7 @@ void MainWindow::updateTeamList()
                 else
                     autoStatsStr += args[1] + ": " + QString::number(total / matchData.size() * 100, 10, 1) + "%\n";
             }
-            if (dataType == "string")
+            else if (dataType == "string")
             {
                 autoStatsStr += args[1] + ":\n";
                 for (int l = 0; l < matchData.size(); l++)
@@ -967,6 +997,37 @@ void MainWindow::updateTeamList()
                     if (!value.isEmpty())
                         autoStatsStr += Util::findString(matchData[l], "mn") + ": " + value.replace("|||", "    \n") + "\n";
                 }
+            }
+            else if (dataType.startsWith("dropdown"))
+            {
+                double totalPoints = 0.0;
+                QStringList pointsWorth = QStringList();
+                if (args.length() > 3) pointsWorth = args[3].split(",");
+
+                QStringList names = dataType.mid(9).split(",");
+
+                QList<int> totals = QList<int>();
+                for (int l = 0; l < names.length(); l++) {
+                    totals.push_back(0);
+                }
+
+                for (int l = 0; l < matchData.size(); l++)
+                {
+                    int index = Util::findDouble(matchData[l], args[0]);
+                    if (index >= 0 && totals.length() > index) {
+                        totals[index] =  totals[index] + 1;
+                        if (index >= 0 && pointsWorth.length() > index) {
+                            totalPoints += pointsWorth[index].toFloat();
+                        }
+                    }
+                }
+
+                autoStatsStr += args[1] + ":\n";
+                for (int l = 0; l < names.length(); l++) {
+                    autoStatsStr += "    " + names[l] + " - " + QString::number((float) totals[l] / (float) matchData.size() * 100, 10, 1) + "%\n";
+                }
+
+                totalAuton += totalPoints / matchData.size();
             }
         }
 
@@ -1016,7 +1077,7 @@ void MainWindow::updateTeamList()
                 else
                     teleopStatsStr += args[1] + ": " + QString::number(total / matchData.size() * 100, 10, 1) + "%\n";
             }
-            if (dataType == "string")
+            else if (dataType == "string")
             {
                 teleopStatsStr += args[1] + ":\n";
                 for (int l = 0; l < matchData.size(); l++)
@@ -1025,6 +1086,37 @@ void MainWindow::updateTeamList()
                     if (!value.isEmpty())
                         teleopStatsStr += Util::findString(matchData[l], "mn") + ": " + value.replace("|||", "    \n") + "\n";
                 }
+            }
+            else if (dataType.startsWith("dropdown"))
+            {
+                double totalPoints = 0.0;
+                QStringList pointsWorth = QStringList();
+                if (args.length() > 3) pointsWorth = args[3].split(",");
+
+                QStringList names = dataType.mid(9).split(",");
+
+                QList<int> totals = QList<int>();
+                for (int l = 0; l < names.length(); l++) {
+                    totals.push_back(0);
+                }
+
+                for (int l = 0; l < matchData.size(); l++)
+                {
+                    int index = Util::findDouble(matchData[l], args[0]);
+                    if (index >= 0 && totals.length() > index) {
+                        totals[index] =  totals[index] + 1;
+                        if (index >= 0 && pointsWorth.length() > index) {
+                            totalPoints += pointsWorth[index].toFloat();
+                        }
+                    }
+                }
+
+                teleopStatsStr += args[1] + ":\n";
+                for (int l = 0; l < names.length(); l++) {
+                    teleopStatsStr += "    " + names[l] + " - " + QString::number((float) totals[l] / (float) matchData.size() * 100, 10, 1) + "%\n";
+                }
+
+                totalTeleOP += totalPoints / matchData.size();
             }
         }
         
