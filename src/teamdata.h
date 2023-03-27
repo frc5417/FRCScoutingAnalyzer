@@ -20,6 +20,15 @@ public:
         originalMatchData = QStringList();
     }
 
+    ~TeamData() {
+        if (customPlotTeleop != nullptr && customPlotTeleop != NULL) {
+            customPlotTeleop->deleteLater();
+        }
+        if (customPlotAuton != nullptr && customPlotAuton != NULL) {
+            customPlotAuton->deleteLater();
+        }
+    }
+
     static bool sortByTotalPoints(QString match1, QString match2, QStringList teleopDatasetBreakdown, QStringList autonDatasetBreakdown)
     {
         float match1Total = 0.0;
@@ -125,7 +134,9 @@ public:
     }
 
     void setCustomPlotAuton(QCustomPlot *plot) {
-        if (customPlotAuton != nullptr && customPlotAuton != NULL) {} else {
+        if (customPlotAuton != nullptr && customPlotAuton != NULL) {
+            customPlotAuton = plot;
+        } else {
             customPlotAuton = plot;
         }
     }
@@ -135,9 +146,19 @@ public:
     }
 
     void setCustomPlotTeleop(QCustomPlot *plot) {
-        if (customPlotTeleop != nullptr && customPlotTeleop != NULL) {} else {
+        if (customPlotTeleop != nullptr && customPlotTeleop != NULL) {
+            customPlotTeleop = plot;
+        } else {
             customPlotTeleop = plot;
         }
+    }
+
+    void setCustomSortValue(double value) {
+        customSortValue = value;
+    }
+
+    double getCustomSortValue() {
+        return customSortValue;
     }
 
 private:
@@ -151,6 +172,7 @@ private:
     QCustomPlot *customPlotAuton = nullptr;
     QCustomPlot *customPlotTeleop = nullptr;
 
+    double customSortValue = -1.0;
 };
 
 #endif

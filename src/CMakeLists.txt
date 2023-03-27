@@ -8,8 +8,10 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(QT_USE_QTMAIN TRUE)
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING
-      "Default build type: Release" FORCE)
+  # set(CMAKE_BUILD_TYPE "Release" CACHE STRING
+  #     "Default build type: Release" FORCE)
+  set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
+      "Default build type: Debug" FORCE)
 endif()
 
 add_executable(ScoutingAnalyzer
@@ -19,6 +21,7 @@ add_executable(ScoutingAnalyzer
   mainwindow.cpp
   mainwindow.h
   teamdata.h
+  qwidgetwithclick.h
   qcustomplot/qcustomplot.cpp
   qcustomplot/qcustomplot.h
 )

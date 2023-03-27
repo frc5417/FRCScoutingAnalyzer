@@ -19,3 +19,4 @@ build/ScoutingAnalyzerWindows/*
 build/ScoutingAnalyzerLinux/*
 *_autogen/
 *.pro.user
+build/datasets.txt

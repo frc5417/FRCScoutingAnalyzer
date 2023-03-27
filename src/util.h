@@ -30,6 +30,36 @@ static QString findString(QString matchData, QString key) {
     return "";
 }
 
+static double findPointValue(QStringList datasetData, QString key) {
+    for (int i = 0; i < datasetData.length(); i++) {
+        if (datasetData[i].split("|")[0] == key) {
+            return datasetData[i].split("|")[3].toDouble();
+        }
+    }
+
+    return 0.0;
+}
+
+static QStringList findPointValueArray(QStringList datasetData, QString key) {
+    for (int i = 0; i < datasetData.length(); i++) {
+        if (datasetData[i].split("|")[0] == key) {
+            return datasetData[i].split("|")[3].split(",");
+        }
+    }
+
+    return QStringList();
+}
+
+static QString findDatasetType(QStringList datasetData, QString key) {
+    for (int i = 0; i < datasetData.length(); i++) {
+        if (datasetData[i].split("|")[0] == key) {
+            return datasetData[i].split("|")[2];
+        }
+    }
+
+    return "";
+}
+
 };
 
 #endif

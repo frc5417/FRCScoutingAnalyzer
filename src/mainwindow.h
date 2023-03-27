@@ -9,6 +9,8 @@
 #include <QHash>
 #include <QList>
 
+#include "qwidgetwithclick.h"
+
 class MainWindow : public QWidget
 {
     Q_OBJECT
@@ -26,10 +28,12 @@ private:
     void makeFilterWdg(QWidget *filterDataWdg);
     void makeInputDataWdg(QWidget *inputDataWdg);
     void handleSortSelection(QString sortBy);
+    void showTeamMatches(TeamData *teamData);
     void updateTeamList();
     void updateTeamData();
     void saveData();
 
+    void clickedTeam();
     void clickedAuton();
     void clickedTeleop();
 
@@ -38,6 +42,10 @@ private:
     QScrollArea *dataScroll;
     QVBoxLayout *dataScrollLayout;
     QLineEdit *inputDataBox;
+
+    QWidgetWithClick *matchBreakdownBlur;
+    QScrollArea *matchBreakdownScroll;
+    QVBoxLayout *matchBreakdownScrollLayout;
 
     QString datasetFilePath;
     QStringList stringData;

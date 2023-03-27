@@ -1,4 +1,5 @@
 # FORMAT = id|Name|type|points|settings example: df|Defensive Skill|number|0|ignore=-1
+# dropdown FORMAT: id|Name|dropdown-option1,option2|point1s,points2 example= acs|Charge Station|dropdown-None,Docked,Docked & Engaged|0,8,12
 
 auton
 lc|Left Community|bool|3
@@ -8,8 +9,7 @@ act|Cube Top Scored|number|6
 aob|Cone Bottom Scored|number|3
 aom|Cone Middle Scored|number|4
 aot|Cone Top Scored|number|6
-adc|Robot Docked|bool|8
-aeg|Robot Engaged|bool|12
+acs|Charge Station|dropdown-None,Docked,Docked & Engaged|0,8,12
 teleop
 tcb|Cube Bottom Scored|number|2
 tcm|Cube Middle Scored|number|3
@@ -17,8 +17,6 @@ tct|Cube Top Scored|number|5
 tob|Cone Bottom Scored|number|2
 tom|Cone Middle Scored|number|3
 tot|Cone Top Scored|number|5
-tdc|Robot Docked|bool|6
-teg|Robot Engaged|bool|10
+tcs|Charge Station|dropdown-None,Docked,Docked & Engaged|0,6,10
 tpk|Robot Parked|bool|2
-cyc|Estimated Cycle Time|number|
 n|Notes|string
