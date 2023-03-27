@@ -821,10 +821,15 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
             {
         graphWdg->hide();
 
+        qDebug() << "Graphs are being updated.";
+
         for (int i = 0; i < teamsData.count(); i++)
         {
             QCustomPlot* autonTeamPlot = teamsData[i]->getCustomPlotAuton();
             QCustomPlot* teleopTeamPlot = teamsData[i]->getCustomPlotTeleop();
+
+            qDebug() << autonTeamPlot << teleopTeamPlot;
+
             autonTeamPlot->clearGraphs();
             teleopTeamPlot->clearGraphs();
 
@@ -1249,33 +1254,83 @@ void MainWindow::handleSortSelection(QString sortBy)
                 dataset += autonDatasetBreakdown;
                 QStringList keys = sortOptions[i].split("|").length() > 1 ? sortOptions[i].split("|")[1].split(",") : QStringList() << "tn";
                 std::sort(teamsData.begin(), teamsData.end(), [=](TeamData *v1, TeamData *v2)
-                          {                    
+                {
                     float total1 = 0.0;
                     float total2 = 0.0;
                     QStringList matchData1 = v1->getMatchData();
                     QStringList matchData2 = v2->getMatchData();
                     for (int i = 0; i < keys.size(); i++)
                     {
-		                double pointValue = Util::findPointValue(dataset, keys[i].mid(2));
-                        for (int l = 0; l < matchData1.size(); l++)
-                        {
-                            if (keys[i].startsWith("p-")) {
-				                total1 += Util::findDouble(matchData1[l], keys[i].mid(2)) * pointValue;
-			                } else {
-			    	            total1 += Util::findDouble(matchData1[l], keys[i]);
-			                }
-                        }
-                        for (int l = 0; l < matchData2.size(); l++)
-                        {
-			                if (keys[i].startsWith("p-")) {
-                                total2 += Util::findDouble(matchData2[l], keys[i].mid(2)) * pointValue;
-			                } else {
-				                total2 += Util::findDouble(matchData2[l], keys[i]);
-			                }
+                        QString datasetType = "";
+                        if (keys[i].startsWith("p-")) datasetType = Util::findDatasetType(dataset, keys[i].mid(2));
+                        else datasetType = Util::findDatasetType(dataset, keys[i]);
+
+
+
+                        if (datasetType == "number" || datasetType == "bool") {
+                            double pointValue = Util::findPointValue(dataset, keys[i].mid(2));
+                            for (int l = 0; l < matchData1.size(); l++)
+                            {
+                                if (keys[i].startsWith("p-")) {
+                                    total1 += Util::findDouble(matchData1[l], keys[i].mid(2)) * pointValue;
+                                } else {
+                                    total1 += Util::findDouble(matchData1[l], keys[i]);
+                                }
+                            }
+                            for (int l = 0; l < matchData2.size(); l++)
+                            {
+                                if (keys[i].startsWith("p-")) {
+                                    total2 += Util::findDouble(matchData2[l], keys[i].mid(2)) * pointValue;
+                                } else {
+                                    total2 += Util::findDouble(matchData2[l], keys[i]);
+                                }
+                            }
+                        } else if (datasetType.startsWith("dropdown")) {
+                            QStringList pointsWorth = Util::findPointValueArray(dataset, keys[i].mid(2));
+                            QStringList names = datasetType.mid(9).split(",");
+
+                            for (int l = 0; l < matchData1.size(); l++)
+                            {
+                                if (keys[i].startsWith("p-")) {
+                                    int index = Util::findDouble(matchData1[l], keys[i].mid(2));
+                                    if (index >= 0 && names.length() > index)
+                                    {
+                                        if (index >= 0 && pointsWorth.length() > index)
+                                        {
+                                            total1 += pointsWorth[index].toFloat();
+                                        }
+                                    }
+                                    else {
+                                        total1 += index;
+                                    }
+                                } else {
+                                    qDebug() << keys[i] << Util::findDouble(matchData1[l], keys[i]);
+                                    total1 += Util::findDouble(matchData1[l], keys[i]);
+                                }
+                            }
+
+                            for (int l = 0; l < matchData2.size(); l++)
+                            {
+                                if (keys[i].startsWith("p-")) {
+                                    int index = Util::findDouble(matchData2[l], keys[i].mid(2));
+                                    if (index >= 0 && names.length() > index)
+                                    {
+                                        if (index >= 0 && pointsWorth.length() > index)
+                                        {
+                                            total2 += pointsWorth[index].toFloat();
+                                        }
+                                    }
+                                    else {
+                                        total2 += index;
+                                    }
+                                } else {
+                                    total2 += Util::findDouble(matchData2[l], keys[i]);
+                                }
+                            }
                         }
                     }
-                    total1 = total1 / matchData1.size();
-                    total2 = total2 / matchData2.size();
+                    total1 = total1 / (float) matchData1.size();
+                    total2 = total2 / (float) matchData2.size();
 
                     v1->setCustomSortValue(total1);
                     v2->setCustomSortValue(total2);

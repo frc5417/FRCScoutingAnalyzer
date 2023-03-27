@@ -130,6 +130,7 @@ public:
     }
 
     QCustomPlot* getCustomPlotAuton() {
+        qDebug() << "customPlotAuton requested:" << customPlotAuton;
         return customPlotAuton;
     }
 

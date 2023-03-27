@@ -4,6 +4,6 @@
 TeleOP Cube/Cone|tcb,tcm,tct,tnb,tnm,tnt|desc
 Tele Cube/Cone Points|p-tcb,p-tcm,p-tct,p-tnb,p-tnm,p-tnt|desc
 TeleOP Cube Total|tcb,tcm,tct|desc
-TeleOP Cone Total|tnb,tnm,tnt|desc
-Engaged|teg|desc
+TeleOP Cone Total|tob,tom,tot|desc
+TeleOP Charge Station|tcs|desc
 Cycle Time|cyc|asc
