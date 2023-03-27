@@ -8,6 +8,7 @@ SOURCES += src/datasetpage.cpp
 SOURCES += src/mainwindow.cpp
 SOURCES += src/qcustomplot/qcustomplot.cpp
 
+HEADERS += src/qwidgetwithclick.h
 HEADERS += src/datasetpage.h
 HEADERS += src/mainwindow.h
 HEADERS += src/teamdata.h

@@ -20,3 +20,6 @@ build/ScoutingAnalyzerLinux/*
 *_autogen/
 *.pro.user
 build/datasets.txt
+Makefile.Debug
+Makefile.Release
+.qmake.stash

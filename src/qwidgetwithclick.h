@@ -2,6 +2,8 @@
 #define QWIDGETWITHCLICK_H
 
 #include <QWidget>
+#include <QStyleOption>
+#include <QPainter>
 #include <QDebug>
 
 class QWidgetWithClick : public QWidget {
@@ -13,11 +15,11 @@ class QWidgetWithClick : public QWidget {
     QWidgetWithClick() : QWidget() {};
 
   private:
-    void mousePressEvent(QMouseEvent *event) override {
+    void mousePressEvent(QMouseEvent *) override {
       emit clicked();
     }
 
-    void paintEvent(QPaintEvent * e) override
+    void paintEvent(QPaintEvent *) override
     {
       QStyleOption opt;
       opt.init(this);
