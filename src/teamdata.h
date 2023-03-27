@@ -130,12 +130,13 @@ public:
     }
 
     QCustomPlot* getCustomPlotAuton() {
-        qDebug() << "customPlotAuton requested:" << customPlotAuton;
         return customPlotAuton;
     }
 
     void setCustomPlotAuton(QCustomPlot *plot) {
-        if (customPlotAuton != nullptr && customPlotAuton != NULL) {} else {
+        if (customPlotAuton != nullptr && customPlotAuton != NULL) {
+            customPlotAuton = plot;
+        } else {
             customPlotAuton = plot;
         }
     }
@@ -145,7 +146,9 @@ public:
     }
 
     void setCustomPlotTeleop(QCustomPlot *plot) {
-        if (customPlotTeleop != nullptr && customPlotTeleop != NULL) {} else {
+        if (customPlotTeleop != nullptr && customPlotTeleop != NULL) {
+            customPlotTeleop = plot;
+        } else {
             customPlotTeleop = plot;
         }
     }

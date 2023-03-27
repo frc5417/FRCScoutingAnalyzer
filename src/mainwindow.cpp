@@ -823,12 +823,10 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
 
         qDebug() << "Graphs are being updated.";
 
-        for (int i = 0; i < teamsData.count(); i++)
+        for (int i = 0; i < teamsData.size(); i++)
         {
             QCustomPlot* autonTeamPlot = teamsData[i]->getCustomPlotAuton();
             QCustomPlot* teleopTeamPlot = teamsData[i]->getCustomPlotTeleop();
-
-            qDebug() << autonTeamPlot << teleopTeamPlot;
 
             autonTeamPlot->clearGraphs();
             teleopTeamPlot->clearGraphs();
@@ -836,9 +834,13 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
             QStringList matchData = teamsData[i]->getMatchData();
             int matchSize = matchData.size();
 
+            autonTeamPlot->hide();
+            teleopTeamPlot->hide();
+
             for (int j = 0; j < autonCheckBoxes.size(); j++)
             {
                 if (autonCheckBoxes[j]->isChecked()) {
+
                     QString plotOption = autonCheckBoxes[j]->objectName();
                     QStringList plotOptionArgs = plotOption.split("|");
                     QStringList plotSourceArgs = plotOptionArgs[1].split(",");
