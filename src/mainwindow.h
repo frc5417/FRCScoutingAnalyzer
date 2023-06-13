@@ -9,6 +9,8 @@
 #include <QHash>
 #include <QList>
 
+#include <QNetworkAccessManager>
+
 #include "qwidgetwithclick.h"
 
 class MainWindow : public QWidget
@@ -37,7 +39,24 @@ private:
     void clickedAuton();
     void clickedTeleop();
 
+    QComboBox *eventsDropdown = nullptr;
+    QNetworkAccessManager *manager = new QNetworkAccessManager();
+    QString lastManagerRequest = "";
+    void clearRanking();
+    void clearMatchPredictions();
+    void calculateMatchPredictions();
+
+    QDir datasetFolder;
     QString oldSort = "";
+
+    QString selectedEvent = "";
+    QJsonArray matches;
+    QHash<QString, QString> events = QHash<QString, QString>();
+
+    QScrollArea *rankingScroll;
+    QVBoxLayout *rankingScrollLayout;
+    QScrollArea *matchPredictionScroll;
+    QVBoxLayout *matchPredictionScrollLayout;
 
     QScrollArea *dataScroll;
     QVBoxLayout *dataScrollLayout;
@@ -51,10 +70,13 @@ private:
     QStringList stringData;
     QList<TeamData*> teamsData;
     QStringList teamsHaveData = QStringList();
-    QHash<QString, int> teamsVPos;
+    QHash<QString, QImage> images;
+    QHash<QString, QWidget*> teamsVPos;
+    int lastY = 0;
 
     QList<QString> teleopDatasetBreakdown = QList<QString>();
     QList<QString> autonDatasetBreakdown = QList<QString>();
+    QStringList predictionOptions = QStringList();
     QStringList sortOptions = QStringList();
     QStringList autonPlotOptions = QStringList();
     QStringList teleopPlotOptions = QStringList();

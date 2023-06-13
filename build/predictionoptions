@@ -1,0 +1,26 @@
+# Headers:
+  # Ranking Points
+    # Note: Win/Tie/Lose already automatically calculated
+    # Values under should be in format Name|key{maxNum}+p-key{maxNum}>=value
+    # Supported math logic: "+", ">=", "and"
+    # Spaces are required
+  # ScoringOptions
+    # if theres a max score (POINTS) for the team, put it in the format key{maxNum}
+    # if the number that is cut off should go to another key, use key{maxNum-toKey}
+  # BlueAllianceAPIKey
+    # On the next line, put your API key
+
+RankingPoints
+Activation Bonus|p-acs{12} + p-tcs >= 26
+Coopertition Bonus|acb + acm + act + aob + aom + aot + tcb + tcm + tct + tob + tom + tot >= 14 and acb + acm + act + tcb + tcm + tct >= 4 and aob + aom + aot + tob + tom + tot >= 6
+
+ScoringOptions
+acs{12}
+act,tct{3-tcm}
+aot,tot{6-tom}
+acm,tcm{3-tcb}
+aom,tom{6-tob}
+acb,tcb,aob,tob{9}
+
+BlueAllianceAPIKey
+eBSlyD5KmqHF8qypEttIBGpSgODIEXchss4GKw2SIAvZwApHYJJdExMuUI0Ngbnm

@@ -1,2 +1,5 @@
 /home/bkapla01/FRC2023/ScoutingTesting/New
 /home/bkapla01/FRC2023/ScoutingTesting/FIT-Dallas-Week1
+/home/bkapla01/FRC2023/ScoutingTesting/FIT-Amarillo-Week5
+/home/bkapla01/FRC2023/ScoutingTesting/FIT-Champ-Practice
+/home/bkapla01/FRC2023/ScoutingTesting/FIT-Champ-Quals

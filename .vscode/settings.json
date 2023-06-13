@@ -7,5 +7,6 @@
         "qhash": "cpp",
         "chrono": "cpp",
         "algorithm": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": false
 }

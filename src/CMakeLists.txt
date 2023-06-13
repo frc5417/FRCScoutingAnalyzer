@@ -1,7 +1,7 @@
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Qt5 COMPONENTS Widgets PrintSupport REQUIRED)
+find_package(Qt5 COMPONENTS Widgets PrintSupport Network REQUIRED)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
@@ -26,7 +26,7 @@ add_executable(ScoutingAnalyzer
   qcustomplot/qcustomplot.h
 )
 
-target_link_libraries(ScoutingAnalyzer PRIVATE Qt5::Widgets Qt5::PrintSupport )
+target_link_libraries(ScoutingAnalyzer PRIVATE Qt5::Widgets Qt5::PrintSupport Qt5::Network)
 
 install(
   TARGETS ScoutingAnalyzer

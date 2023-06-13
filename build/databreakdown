@@ -9,7 +9,7 @@ act|Cube Top Scored|number|6
 aob|Cone Bottom Scored|number|3
 aom|Cone Middle Scored|number|4
 aot|Cone Top Scored|number|6
-acs|Charge Station|dropdown-None,Docked,Docked & Engaged|0,8,12
+acs|Charge Station|dropdown-None,Docked,Docked & Engaged,Rolled Off|0,8,12,0
 teleop
 tcb|Cube Bottom Scored|number|2
 tcm|Cube Middle Scored|number|3
@@ -17,6 +17,8 @@ tct|Cube Top Scored|number|5
 tob|Cone Bottom Scored|number|2
 tom|Cone Middle Scored|number|3
 tot|Cone Top Scored|number|5
-tcs|Charge Station|dropdown-None,Docked,Docked & Engaged|0,6,10
+tcs|Charge Station|dropdown-None,Docked,Docked & Engaged,Rolled Off|0,6,10,0
 tpk|Robot Parked|bool|2
+dc|Driver Comp|number|0
+df|Defensive|number|0
 n|Notes|string

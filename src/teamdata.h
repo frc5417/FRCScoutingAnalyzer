@@ -129,16 +129,20 @@ public:
         return averageTotal;
     }
 
+    QLabel* getQLabelAuton() {
+        return qlabelAuton;
+    }
+
+    void setQLabelAuton(QLabel *plot) {
+        qlabelAuton = plot;
+    }
+
     QCustomPlot* getCustomPlotAuton() {
         return customPlotAuton;
     }
 
     void setCustomPlotAuton(QCustomPlot *plot) {
-        if (customPlotAuton != nullptr && customPlotAuton != NULL) {
-            customPlotAuton = plot;
-        } else {
-            customPlotAuton = plot;
-        }
+        customPlotAuton = plot;
     }
 
     QCustomPlot* getCustomPlotTeleop() {
@@ -169,6 +173,7 @@ private:
     float averageTeleOP = 0.0;
     float averageTotal = 0.0;
 
+    QLabel *qlabelAuton = nullptr;
     QCustomPlot *customPlotAuton = nullptr;
     QCustomPlot *customPlotTeleop = nullptr;
 

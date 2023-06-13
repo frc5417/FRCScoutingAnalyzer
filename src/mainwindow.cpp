@@ -18,6 +18,10 @@
 #include <QDebug>
 #include <QVector>
 #include <QTextStream>
+#include <QJsonObject>
+#include <QJsonDocument>
+
+#include <QNetworkReply>
 
 #include <algorithm>
 
@@ -52,7 +56,7 @@ MainWindow::MainWindow(QString datasetPath)
     stringData = QStringList();
     teamsData = QList<TeamData *>();
 
-    QDir datasetFolder(datasetPath);
+    datasetFolder = QDir(datasetPath);
     datasetFilePath = datasetFolder.filePath("dataset.data");
 
     QFile datasetFile(datasetFilePath);
@@ -91,6 +95,22 @@ MainWindow::MainWindow(QString datasetPath)
 
         datasetFile.close();
     };
+
+    QFile predictionOptionsFile("./predictionoptions");
+    if (predictionOptionsFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream in(&predictionOptionsFile);
+        QString line = in.readLine();
+        while (!line.isNull())
+        {
+            if (!line.startsWith("#") && !line.isEmpty())
+            {
+                predictionOptions.append(line);
+            }
+            line = in.readLine();
+        }
+        predictionOptionsFile.close();
+    }
 
     QFile databreakdownFile("./databreakdown");
     if (databreakdownFile.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -190,7 +210,7 @@ MainWindow::MainWindow(QString datasetPath)
 
     QPushButton *graphOptionsBtn = new QPushButton(this);
     graphOptionsBtn->setStyleSheet("background-color: #BE1E2D; padding: 10px; border-radius: 15px; margin: 10px; font-size: 18px;");
-    graphOptionsBtn->setText("Graph Options");
+    graphOptionsBtn->setText("Visual Options");
     graphOptionsBtn->setFocusPolicy(Qt::FocusPolicy::NoFocus);
     graphOptionsBtn->show();
     layout->addWidget(graphOptionsBtn, 2, 0, 1, 1);
@@ -255,9 +275,7 @@ MainWindow::MainWindow(QString datasetPath)
         QString line = in.readLine();
         while (!line.isNull())
         {
-            if (line.startsWith("#") || line.isEmpty())
-            {
-            }
+            if (line.startsWith("#") || line.isEmpty()) {}
             else
             {
                 sortOptions.append(line);
@@ -302,12 +320,119 @@ MainWindow::MainWindow(QString datasetPath)
 
     layout->addWidget(sortContainer, 4, 0, 1, 1);
 
+    QWidget *screensContainer = new QWidget(this);
+    QVBoxLayout *screensContainerLayout = new QVBoxLayout(screensContainer);
+
+    QPushButton *informationBtn = new QPushButton(screensContainer);
+    informationBtn->setStyleSheet("QPushButton { background-color: rgba(190, 30, 45, 0.65); padding: 10px; border-radius: 15px; } QPushButton::disabled { background-color: #BE1E2D; }");
+    informationBtn->setText("Data");
+    informationBtn->setDisabled(true);
+    informationBtn->setFocusPolicy(Qt::FocusPolicy::NoFocus);
+    screensContainerLayout->addWidget(informationBtn);
+
+    QPushButton *predictionBtn = new QPushButton(screensContainer);
+    predictionBtn->setStyleSheet("QPushButton { background-color: rgba(190, 30, 45, 0.65); padding: 10px; border-radius: 15px; } QPushButton::disabled { background-color: #BE1E2D; }");
+    predictionBtn->setFocusPolicy(Qt::FocusPolicy::NoFocus);
+    predictionBtn->setText("Prediction");
+    screensContainerLayout->addWidget(predictionBtn);
+    layout->addWidget(screensContainer, 0, 1, 1, 1);
+
+    connect(informationBtn, &QAbstractButton::clicked, [=]() {
+        informationBtn->setDisabled(true);
+        predictionBtn->setDisabled(false);
+
+        dataScroll->show();
+        rankingScroll->hide();
+        matchPredictionScroll->hide();
+    });
+
+    connect(predictionBtn, &QAbstractButton::clicked, [=]() {
+        informationBtn->setDisabled(false);
+        predictionBtn->setDisabled(true);
+
+        dataScroll->hide();
+        rankingScroll->show();
+        matchPredictionScroll->show();
+
+        if (!selectedEvent.isEmpty()) return;
+
+        eventsDropdown = new QComboBox(this);
+        eventsDropdown->setMinimumHeight(40);
+        eventsDropdown->setStyleSheet("QLineEdit { color: white; } QListView { color: white; } QComboBox { border: 2px solid grey; font-size: 18px; font-weight: 500; text-align: center; color: white; } QComboBox QAbstractItemView { color: white; } QComboBox:item { background-color: #2d2d2d; } QComboBox:item:selected { padding-left: 0; background-color: #111111; } QComboBox::down-arrow { color: white; } ");
+        eventsDropdown->setContentsMargins(0, 20, 0, 0);
+
+        QString APIKey = "";
+        
+        for(int i = 0; i < predictionOptions.size(); i++) {
+            if (predictionOptions[i] == "BlueAllianceAPIKey" && predictionOptions.size() > i + 1) {
+                APIKey = predictionOptions[i + 1];
+                break;
+            }
+        }
+
+        connect(eventsDropdown, &QComboBox::currentTextChanged, [=](QString eventName) {
+            if (events.keys().contains(eventName)) {
+                selectedEvent = events.value(eventName);
+                qDebug() << selectedEvent;
+                clearRanking();
+                clearMatchPredictions();
+
+                QString url = "https://www.thebluealliance.com/api/v3/event/" + selectedEvent + "/matches/simple?X-TBA-Auth-Key=" + APIKey;
+                qDebug() << url;
+
+                manager->get(QNetworkRequest(QUrl(url)));
+                lastManagerRequest = "matches";
+            }
+        });
+
+        if (APIKey.isEmpty()) {
+            eventsDropdown->addItem("API Key invalid!");
+        } else {
+            manager->get(QNetworkRequest(QUrl("https://www.thebluealliance.com/api/v3/events/" + QString::number(QDate::currentDate().year()) + "/simple?X-TBA-Auth-Key=" + APIKey)));
+            lastManagerRequest = "events";
+        }
+
+        rankingScrollLayout->addWidget(eventsDropdown);
+    });
+
     QLabel *titleLabel = new QLabel(this);
     titleLabel->setStyleSheet("background-color: #000000; font-size: 24px; text-align: center; font-weight: 500; border-bottom-left-radius: 10px;");
     titleLabel->setText("Scouting Analyzer");
     titleLabel->setAlignment(Qt::AlignCenter);
     titleLabel->setMaximumHeight(150);
-    layout->addWidget(titleLabel, 0, 1, 1, 6);
+    layout->addWidget(titleLabel, 0, 2, 1, 5);
+
+    rankingScroll = new QScrollArea(this);
+    rankingScroll->setStyleSheet("background-color: #5A5A5A; border-top-left-radius: 10px;");
+    rankingScroll->verticalScrollBar()->setStyleSheet("QScrollBar { border: none; background-color: #ffffff; color: black; width: 16px } QScrollBar::handle { background-color: #2d2d2d; }");
+    rankingScroll->setWidgetResizable(true);
+    rankingScroll->hide();
+    layout->addWidget(rankingScroll, 2, 1, 1, 6);
+
+    QWidget *rankingScrollWdg = new QWidget(this);
+    rankingScrollWdg->setStyleSheet("background-color: rgba(0, 0, 0, 0); border-top-left-radius: 10px;");
+    rankingScroll->setWidget(rankingScrollWdg);
+
+    rankingScrollLayout = new QVBoxLayout(this);
+    rankingScrollLayout->setMargin(20);
+    rankingScrollLayout->setSpacing(20);
+    rankingScrollWdg->setLayout(rankingScrollLayout);
+
+    matchPredictionScroll = new QScrollArea(this);
+    matchPredictionScroll->setStyleSheet("background-color: #5A5A5A; border-top-left-radius: 10px;");
+    matchPredictionScroll->verticalScrollBar()->setStyleSheet("QScrollBar { border: none; background-color: #ffffff; color: black; width: 16px } QScrollBar::handle { background-color: #2d2d2d; }");
+    matchPredictionScroll->setWidgetResizable(true);
+    matchPredictionScroll->hide();
+    layout->addWidget(matchPredictionScroll, 3, 1, 4, 6);
+
+    QWidget *matchPredictionScrollWdg = new QWidget(this);
+    matchPredictionScrollWdg->setStyleSheet("background-color: rgba(0, 0, 0, 0); border-top-left-radius: 10px;");
+    matchPredictionScroll->setWidget(matchPredictionScrollWdg);
+
+    matchPredictionScrollLayout = new QVBoxLayout(this);
+    matchPredictionScrollLayout->setMargin(20);
+    matchPredictionScrollLayout->setSpacing(20);
+    matchPredictionScrollWdg->setLayout(matchPredictionScrollLayout);
 
     dataScroll = new QScrollArea(this);
     dataScroll->setStyleSheet("background-color: #5A5A5A; border-top-left-radius: 10px;");
@@ -349,7 +474,7 @@ MainWindow::MainWindow(QString datasetPath)
     connect(searchInput, &QLineEdit::textChanged, [=]()
             {
         QStringList keys = teamsVPos.keys();
-        QList<int> values = teamsVPos.values();
+        QList<QWidget*> values = teamsVPos.values();
         
         if (searchInput->text().isEmpty())
         {
@@ -360,7 +485,8 @@ MainWindow::MainWindow(QString datasetPath)
         for (int i = 0; i < teamsVPos.size(); i++)
         {
             if (keys[i].startsWith(searchInput->text())) {
-                dataScroll->verticalScrollBar()->setSliderPosition(values[i]);
+                QPoint p = values[i]->mapTo(dataScroll, QPoint(0, 0));
+                dataScroll->verticalScrollBar()->setSliderPosition(p.y() + dataScroll->verticalScrollBar()->value());
                 break;
             }
         } });
@@ -399,6 +525,45 @@ MainWindow::MainWindow(QString datasetPath)
     matchBreakdownScrollLayout->setMargin(20);
     matchBreakdownScrollLayout->setSpacing(20);
     matchBreakdownWdg->setLayout(matchBreakdownScrollLayout);
+
+    connect(manager, &QNetworkAccessManager::finished, [=](QNetworkReply *reply) {
+        if (reply->error() == QNetworkReply::NetworkError::NoError) {
+            QString text = reply->readAll();
+
+            if (lastManagerRequest == "matches")
+            {
+                qDebug() << text;
+
+                QJsonDocument jsonResponse = QJsonDocument::fromJson(text.toUtf8());
+                matches = jsonResponse.array();
+                
+                calculateMatchPredictions();
+            }
+            else if (lastManagerRequest == "events")
+            {
+                QJsonDocument jsonResponse = QJsonDocument::fromJson(text.toUtf8());
+                QJsonArray jsonArray = jsonResponse.array();
+                
+                eventsDropdown->addItem("=-= Select an Event =-=");
+
+                QDate curDate = QDate::currentDate();
+                for(int i = 0; i < jsonArray.size(); i++) {
+                    QJsonObject info = jsonArray[i].toObject();
+                    QStringList date = info.value("start_date").toString().split("-");
+                    if (date.length() < 3) continue;
+                    QDate eventDate = QDate(date[0].toInt(), date[1].toInt(), date[2].toInt());
+
+                    int daysBetween = curDate.daysTo(eventDate);
+                    if (abs(daysBetween) < 5) {
+                        eventsDropdown->addItem(info.value("name").toString());
+                        events.insert(info.value("name").toString(), info.value("key").toString());
+                    }
+                }
+            }
+        } else {
+            eventsDropdown->addItem("No Internet or Invalid API Key");
+        }
+    });
 
     layout->setMargin(0);
     this->setLayout(layout);
@@ -740,13 +905,13 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
     graphWdg->setLayout(graphWdgLayout);
 
     QLabel *titleGraphOptions = new QLabel(graphWdg);
-    titleGraphOptions->setText("Graph Options:");
+    titleGraphOptions->setText("Visual Options:");
     titleGraphOptions->setStyleSheet("font-weight: 700;");
     titleGraphOptions->setAlignment(Qt::AlignCenter);
     graphWdgLayout->addWidget(titleGraphOptions, 0, 0, 1, 4);
 
     QLabel *autonGraphLabel = new QLabel(graphWdg);
-    autonGraphLabel->setText("Auton Graphs:");
+    autonGraphLabel->setText("Auton Side:");
     autonGraphLabel->setStyleSheet("font-weight: 700;");
     autonGraphLabel->setAlignment(Qt::AlignCenter);
     graphWdgLayout->addWidget(autonGraphLabel, 1, 0, 2, 2);
@@ -760,8 +925,8 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
         QStringList args = autonPlotOptions[i].split("|");
         QCheckBox *checkBox = new QCheckBox(graphWdg);
         checkBox->setObjectName(autonPlotOptions[i]);
-        checkBox->setStyleSheet("QCheckBox::indicator { width: 65px; height: 65px; }");
-        checkBox->setFixedHeight(60);
+        checkBox->setStyleSheet("QCheckBox { background-color: black; color: white; } QCheckBox::indicator { width: 50px; height: 50px; }");
+        checkBox->setFixedSize(60, 60);
         autonCheckBoxes.append(checkBox);
         graphWdgLayout->addWidget(checkBox, 2 + i, 0, 1, 1);
 
@@ -776,10 +941,28 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
             maxRow = 2 + i;
     }
 
+    // checkbox for team images
+    QCheckBox *imageCheckBox = new QCheckBox(graphWdg);
+    imageCheckBox->setObjectName("image");
+    imageCheckBox->setStyleSheet("QCheckBox { background-color: black; color: white; } QCheckBox::indicator { width: 50px; height: 50px; }");
+    imageCheckBox->setFixedSize(60, 60);
+    autonCheckBoxes.append(imageCheckBox);
+    graphWdgLayout->addWidget(imageCheckBox, 2 + autonPlotOptions.size(), 0, 1, 1);
+
+    connect(imageCheckBox, &QAbstractButton::clicked, this, &MainWindow::clickedAuton);
+
+    QLabel *imageLabel = new QLabel("Robot Pictures", graphWdg);
+    imageLabel->setStyleSheet("font-weight: 500; font-size: 16px; color: white;");
+    imageLabel->setAlignment(Qt::AlignCenter);
+    graphWdgLayout->addWidget(imageLabel, 2 + autonPlotOptions.size(), 1, 1, 1);
+
+    if (2 + autonPlotOptions.size() > maxRow)
+        maxRow = 2 + autonPlotOptions.size();
+
     teleopCheckBoxes = QList<QCheckBox *>();
 
     QLabel *teleopGraphLabel = new QLabel(graphWdg);
-    teleopGraphLabel->setText("TeleOP Graphs:");
+    teleopGraphLabel->setText("TeleOP Visuals:");
     teleopGraphLabel->setStyleSheet("font-weight: 700;");
     teleopGraphLabel->setAlignment(Qt::AlignCenter);
     graphWdgLayout->addWidget(teleopGraphLabel, 1, 2, 2, 2);
@@ -789,8 +972,8 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
         QStringList args = teleopPlotOptions[i].split("|");
         QCheckBox *checkBox = new QCheckBox(graphWdg);
         checkBox->setObjectName(teleopPlotOptions[i]);
-        checkBox->setStyleSheet("QCheckBox::indicator { width: 65px; height: 65px; }");
-        checkBox->setFixedHeight(60);
+        checkBox->setStyleSheet("QCheckBox { background-color: black; color: white; } QCheckBox::indicator { width: 50px; height: 50px; }");
+        checkBox->setFixedSize(60, 60);
         teleopCheckBoxes.append(checkBox);
         graphWdgLayout->addWidget(checkBox, 2 + i, 2, 1, 1);
 
@@ -827,47 +1010,72 @@ void MainWindow::makeGraphWdg(QWidget *graphWdg)
         {
             QCustomPlot* autonTeamPlot = teamsData[i]->getCustomPlotAuton();
             QCustomPlot* teleopTeamPlot = teamsData[i]->getCustomPlotTeleop();
+            QLabel *autonLabel = teamsData[i]->getQLabelAuton();
 
-            autonTeamPlot->clearGraphs();
             teleopTeamPlot->clearGraphs();
 
             QStringList matchData = teamsData[i]->getMatchData();
             int matchSize = matchData.size();
 
-            autonTeamPlot->hide();
             teleopTeamPlot->hide();
 
-            for (int j = 0; j < autonCheckBoxes.size(); j++)
-            {
-                if (autonCheckBoxes[j]->isChecked()) {
-
-                    QString plotOption = autonCheckBoxes[j]->objectName();
-                    QStringList plotOptionArgs = plotOption.split("|");
-                    QStringList plotSourceArgs = plotOptionArgs[1].split(",");
-
-                    QVector<double> x(matchSize), y(matchSize);
-                    for (int l = 0; l < matchSize; l++)
-                    {
-                        x[l] = l; //Util::findDouble(matchData[l], "mn");
-                        double yVal = 0.0;
-                        for (int k = 0; k < plotSourceArgs.size(); k++) {
-                            yVal += Util::findDouble(matchData[l], plotSourceArgs[k]);
-                        }
-                        y[l] = yVal;
-                    }
-                    
-                    autonTeamPlot->addGraph();
-                    autonTeamPlot->graph(0)->setData(x, y);
-                    // give the axes some labels:
-                    autonTeamPlot->xAxis->setLabel("Matches");
-                    autonTeamPlot->yAxis->setLabel(plotOptionArgs[0]);
-                    // set axes ranges, so we see all data:
-                    autonTeamPlot->xAxis->setRange(0, matchSize);
-                    autonTeamPlot->yAxis->setRange(plotOptionArgs[2].toInt(), plotOptionArgs[3].toInt());
-                    autonTeamPlot->replot();
-                    autonTeamPlot->show();
-                }
+            if (autonTeamPlot != nullptr) {
+                autonTeamPlot->clearGraphs();
+                autonTeamPlot->hide();
             }
+
+            if (autonLabel != nullptr) {
+                autonLabel->hide();
+            }
+
+            for (int j = 0; j < autonCheckBoxes.size(); j++)
+                {
+                    if (autonCheckBoxes[j]->isChecked()) {
+
+                        QString plotOption = autonCheckBoxes[j]->objectName();
+
+                        if (plotOption == "image") {
+                            if (images.keys().contains(teamsData[i]->teamNumber)) {
+                                QImage img = images.value(teamsData[i]->teamNumber);
+
+                                QPixmap pixmap = QPixmap::fromImage(img);
+                                QTransform tr;
+                                if (img.width() > img.height())
+                                    tr.rotate(90);
+                                pixmap = pixmap.transformed(tr);
+
+                                autonLabel->setPixmap(pixmap.scaledToWidth(teamsVPos[teamsData[i]->teamNumber]->width() / 4));
+                                autonLabel->setFixedWidth(teamsVPos[teamsData[i]->teamNumber]->width() / 4);
+                                autonLabel->show();
+                            }
+                        } else {
+                            QStringList plotOptionArgs = plotOption.split("|");
+                            QStringList plotSourceArgs = plotOptionArgs[1].split(",");
+
+                            QVector<double> x(matchSize), y(matchSize);
+                            for (int l = 0; l < matchSize; l++)
+                            {
+                                x[l] = l; //Util::findDouble(matchData[l], "mn");
+                                double yVal = 0.0;
+                                for (int k = 0; k < plotSourceArgs.size(); k++) {
+                                    yVal += Util::findDouble(matchData[l], plotSourceArgs[k]);
+                                }
+                                y[l] = yVal;
+                            }
+                            
+                            autonTeamPlot->addGraph();
+                            autonTeamPlot->graph(0)->setData(x, y);
+                            // give the axes some labels:
+                            autonTeamPlot->xAxis->setLabel("Matches");
+                            autonTeamPlot->yAxis->setLabel(plotOptionArgs[0]);
+                            // set axes ranges, so we see all data:
+                            autonTeamPlot->xAxis->setRange(0, matchSize);
+                            autonTeamPlot->yAxis->setRange(plotOptionArgs[2].toInt(), plotOptionArgs[3].toInt());
+                            autonTeamPlot->replot();
+                            autonTeamPlot->show();
+                        }
+                    }
+                }
 
             for (int j = 0; j < teleopCheckBoxes.size(); j++)
             {
@@ -968,6 +1176,7 @@ void MainWindow::updateTeamList()
     }
 
     teamsVPos.clear();
+    lastY = 0;
 
     for (int i = 0; i < teamsData.count(); i++)
     {
@@ -983,6 +1192,7 @@ void MainWindow::updateTeamList()
         QGridLayout *gridLayout = new QGridLayout(main);
 
         QLabel *teamLabel = new QLabel("Team " + teamsData[i]->teamNumber);
+        teamLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
         teamLabel->setStyleSheet("font-size: 20px; font-weight: 700;");
         teamLabel->setAlignment(Qt::AlignCenter);
         gridLayout->addWidget(teamLabel, 0, 0, 1, 4);
@@ -1002,19 +1212,44 @@ void MainWindow::updateTeamList()
         QLabel *totalPointsLabel = new QLabel("Total Points ");
         totalPointsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
         totalPointsLabel->setAlignment(Qt::AlignCenter);
+        totalPointsLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
         gridLayout->addWidget(totalPointsLabel, 1, 0, 1, 4);
 
         QLabel *autoStatsLabel = new QLabel("Autonomous Stats");
         autoStatsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
         autoStatsLabel->setAlignment(Qt::AlignCenter);
+        autoStatsLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
         gridLayout->addWidget(autoStatsLabel, 2, 0, 1, 2);
+
+        QString imagePath = "";
+        QFileInfo image1 = QFileInfo(datasetFolder.filePath(teamsData[i]->teamNumber + ".jpg"));
+        if (image1.exists()) {
+            imagePath = datasetFolder.filePath(teamsData[i]->teamNumber + ".jpg");
+        }
+        else {
+            QFileInfo image2 = QFileInfo(datasetFolder.filePath(teamsData[i]->teamNumber + ".png"));
+            if (image2.exists()) imagePath = datasetFolder.filePath(teamsData[i]->teamNumber + ".png");
+        }
+
+        QLabel *image = nullptr;
+        // qDebug() << "imagePath:" << imagePath;
+        if (!imagePath.isEmpty()) {
+            if (!images.keys().contains(teamsData[i]->teamNumber)) {
+                images.insert(teamsData[i]->teamNumber, QImage(imagePath).scaledToWidth(600));
+            }
+
+            image = new QLabel(this);
+            teamsData[i]->setQLabelAuton(image);
+            image->hide();
+            gridLayout->addWidget(image, 3, 1, 1, 1);
+        }
 
         QCustomPlot *customPlotAuton = new QCustomPlot(this);
         teamsData[i]->setCustomPlotAuton(customPlotAuton);
         customPlotAuton->hide();
         gridLayout->addWidget(customPlotAuton, 3, 1, 1, 1);
 
-        QLabel *autoStats = new QLabel();
+        QLabel *autoStats = new QLabel();        
         autoStats->setStyleSheet("font-size: 16px; font-weight: 500;");
         autoStats->setAlignment(Qt::AlignLeft);
 
@@ -1094,6 +1329,7 @@ void MainWindow::updateTeamList()
         autoStats->setText(autoStatsStr);
         autoStats->setWordWrap(true);
         autoStats->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+        autoStats->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
         gridLayout->addWidget(autoStats, 3, 0, 1, 1);
 
@@ -1102,6 +1338,7 @@ void MainWindow::updateTeamList()
         QLabel *teleOpStatsLabel = new QLabel("TeleOP Stats");
         teleOpStatsLabel->setStyleSheet("font-size: 18px; font-weight: 500;");
         teleOpStatsLabel->setAlignment(Qt::AlignCenter);
+        teleOpStatsLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
         gridLayout->addWidget(teleOpStatsLabel, 2, 2, 1, 2);
 
         QCustomPlot *customPlotTeleop = new QCustomPlot(this);
@@ -1188,6 +1425,7 @@ void MainWindow::updateTeamList()
         teleOpStats->setText(teleopStatsStr);
         teleOpStats->setWordWrap(true);
         teleOpStats->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+        teleOpStats->setTextInteractionFlags(Qt::TextSelectableByMouse);
         gridLayout->addWidget(teleOpStats, 3, 2, 1, 1);
 
         teleOpStatsLabel->setText("TeleOP Stats - " + QString::number(totalTeleOP, 10, 1) + " Average Points");
@@ -1197,6 +1435,20 @@ void MainWindow::updateTeamList()
             gridLayout->setColumnStretch(c, 1);
         connect(main, &QWidgetWithClick::resized, [=]()
                 {
+            if(image != nullptr && image->isVisible()) {
+                QImage img = images.value(teamsData[i]->teamNumber);
+
+                QPixmap pixmap = QPixmap::fromImage(img);
+                QTransform tr;
+                if (pixmap.width() > pixmap.height())
+                    tr.rotate(90);
+                pixmap = pixmap.transformed(tr);
+
+                // qDebug() << main->width() / 4 << (int) ((float) img.height() / (float) img.width() * (float) (main->width() / 4)) << (float) img.height() << (float) img.width() * (float) (main->width() / 4) << (float) img.height() / (float) img.width() * (float) (main->width() / 4);
+                image->setPixmap(pixmap.scaledToWidth(main->width() / 4));
+                image->setFixedWidth(main->width() / 4);
+            }
+
             teleOpStats->setFixedWidth(main->width() / 4);
             autoStats->setFixedWidth(main->width() / 4); });
 
@@ -1207,7 +1459,7 @@ void MainWindow::updateTeamList()
 
         dataScrollLayout->addWidget(main);
 
-        teamsVPos.insert(teamsData[i]->teamNumber, 400 * i);
+        teamsVPos.insert(teamsData[i]->teamNumber, main);
     }
 }
 
@@ -1306,7 +1558,7 @@ void MainWindow::handleSortSelection(QString sortBy)
                                         total1 += index;
                                     }
                                 } else {
-                                    qDebug() << keys[i] << Util::findDouble(matchData1[l], keys[i]);
+                                    // qDebug() << keys[i] << Util::findDouble(matchData1[l], keys[i]);
                                     total1 += Util::findDouble(matchData1[l], keys[i]);
                                 }
                             }
@@ -1417,4 +1669,29 @@ void MainWindow::clickedTeam()
     }
 
     qDebug() << "TeamNumber Clicked: " << teamNumber;
+}
+
+void MainWindow::clearRanking()
+{
+    QLayoutItem *item;
+    while ((item = rankingScrollLayout->takeAt(0)) != NULL)
+    {
+        delete item->widget();
+        delete item;
+    }
+}
+
+void MainWindow::clearMatchPredictions()
+{
+    QLayoutItem *item;
+    while ((item = matchPredictionScrollLayout->takeAt(0)) != NULL)
+    {
+        delete item->widget();
+        delete item;
+    }
+}
+
+void MainWindow::calculateMatchPredictions()
+{
+    qDebug() << matches;
 }
