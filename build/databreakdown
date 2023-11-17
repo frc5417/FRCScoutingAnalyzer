@@ -2,21 +2,16 @@
 # dropdown FORMAT: id|Name|dropdown-option1,option2|point1s,points2 example= acs|Charge Station|dropdown-None,Docked,Docked & Engaged|0,8,12
 
 auton
-lc|Left Community|bool|3
-acb|Cube Bottom Scored|number|3
-acm|Cube Middle Scored|number|4
-act|Cube Top Scored|number|6
-aob|Cone Bottom Scored|number|3
-aom|Cone Middle Scored|number|4
-aot|Cone Top Scored|number|6
-acs|Charge Station|dropdown-None,Docked,Docked & Engaged|0,8,12
+lc|Robot Parked in Backstage|bool|5
+rand_tasks|Randomization Tasks|dropdown-none,White Pixel,Team Prop|0,10,20
+aps|Pixels in Backdrop|number|5
+apb|Pixels in Backstage|number|3
 teleop
-tcb|Cube Bottom Scored|number|2
-tcm|Cube Middle Scored|number|3
-tct|Cube Top Scored|number|5
-tob|Cone Bottom Scored|number|2
-tom|Cone Middle Scored|number|3
-tot|Cone Top Scored|number|5
-tcs|Charge Station|dropdown-None,Docked,Docked & Engaged|0,6,10
-tpk|Robot Parked|bool|2
+tpb|Pixels in Backdrop|number|3
+tps|Pixels in Backstage|number|1
+tpm|Mosaics Made|number|10
+tsb|Set Bonus|number|10
+esr|Suspended from Rigging|bool|20
+eps|Parked in the Backstage|bool|5
+elz|Drone Launching Zone|dropdown-none,Landing Zone 1,Landing Zone 2,Landing Zone 3|0,30,20,10
 n|Notes|string
