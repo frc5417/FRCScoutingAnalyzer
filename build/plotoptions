@@ -3,8 +3,9 @@
 # x axis are matches
 
 auton
-Auton Cube Total|acb,acm,act|0|21
-Auton Cone Total|aob,aom,aot|0|21
+Auton Amp Notes|ana|0|21
+Auton Speaker Notes|ans|0|21
 
 teleop
-TeleOP Cube Total|tcb,tcm,tct|0|21
+TeleOP Amp Notes|tna|0|21
+TeleOP Speaker Notes|tns|0|21
