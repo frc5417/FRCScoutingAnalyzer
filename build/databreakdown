@@ -2,21 +2,14 @@
 # dropdown FORMAT: id|Name|dropdown-option1,option2|point1s,points2 example= acs|Charge Station|dropdown-None,Docked,Docked & Engaged|0,8,12
 
 auton
-lc|Left Community|bool|3
-acb|Cube Bottom Scored|number|3
-acm|Cube Middle Scored|number|4
-act|Cube Top Scored|number|6
-aob|Cone Bottom Scored|number|3
-aom|Cone Middle Scored|number|4
-aot|Cone Top Scored|number|6
-acs|Charge Station|dropdown-None,Docked,Docked & Engaged|0,8,12
+lsz|Left Starting Zone|bool|2
+ana|Notes Scored in Amp|number|2
+ans|Notes Scored in Speaker|number|5
 teleop
-tcb|Cube Bottom Scored|number|2
-tcm|Cube Middle Scored|number|3
-tct|Cube Top Scored|number|5
-tob|Cone Bottom Scored|number|2
-tom|Cone Middle Scored|number|3
-tot|Cone Top Scored|number|5
-tcs|Charge Station|dropdown-None,Docked,Docked & Engaged|0,6,10
-tpk|Robot Parked|bool|2
+tna|Notes Scored in Amp|number|1
+tns|Notes Scored in Speaker|number|2
+ts|Stage|dropdown-None,Parked,On Stage,SPOTLIT On Stage|0,1,3,4
+tnt|Scored Trap|bool|5
+dc|Driver Comp|number|0|ignore=-1
+df|Defensive|number|0|ignore=-1
 n|Notes|string
